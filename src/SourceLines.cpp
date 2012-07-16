@@ -7,7 +7,7 @@
 
 #include "SourceLines.h"
 #include "Tokens.h"
-#include "../plugins/Reports.h"
+#include "Reports.h"
 #include <vector>
 #include <map>
 #include <fstream>
@@ -16,13 +16,6 @@
 
 namespace Vera
 {
-namespace Structures
-{
-
-//using namespace std;
-//using namespace Vera;
-//using namespace Vera::Structures;
-//using namespace Vera::Plugins;
 
 typedef std::map<SourceFiles::FileName, SourceLines::LineCollection> SourceFileCollection;
 static SourceFileCollection sources_;
@@ -64,7 +57,7 @@ void SourceLines::loadFile(const SourceFiles::FileName & name)
         // built-in rule
         if (file.eof())
         {
-			Plugins::Reports::add(name, static_cast<int>(lines.size()), "no newline at end of file");
+			Vera::Reports::add(name, static_cast<int>(lines.size()), "no newline at end of file");
         }
         else
         {
@@ -93,5 +86,4 @@ const std::string & SourceLines::getLine(const SourceFiles::FileName & name, int
     return lines[lineNumber - 1];
 }
 
-} // namespace Structures
 } // namespace Vera

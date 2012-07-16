@@ -14,8 +14,6 @@
 
 namespace Vera
 {
-namespace Structures
-{
 
 class TokensError: public std::runtime_error
 {
@@ -55,7 +53,6 @@ public:
         const FilterSequence & filter);
 };
 
-} // namespace Structures
 } // namespace Vera
 
 #endif // TOKENS_H_INCLUDED

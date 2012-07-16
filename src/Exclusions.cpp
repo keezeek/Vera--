@@ -7,17 +7,15 @@
 
 #include "Exclusions.h"
 #include "Rules.h"
-#include "../structures/SourceFiles.h"
+#include "SourceFiles.h"
 #include "cpptcl-1.1.4/cpptcl.h"
 #include <fstream>
 #include <sstream>
 
 namespace Vera
 {
-namespace Plugins
-{
 
-typedef std::set<Structures::SourceFiles::FileName> FileNameSet;
+typedef std::set<SourceFiles::FileName> FileNameSet;
 typedef std::map<Rules::RuleName, FileNameSet> ExclusionMap;
 static ExclusionMap exclusions;
 
@@ -47,7 +45,7 @@ void Exclusions::setExclusions(const ExclusionFileName & fileName)
         FileNameSet files;
         for (size_t j = 0; j != exceptionListLength; ++j)
         {
-            const Structures::SourceFiles::FileName file = exceptionList.at(interp, j).get();
+            const SourceFiles::FileName file = exceptionList.at(interp, j).get();
             files.insert(file);
         }
 
@@ -55,7 +53,7 @@ void Exclusions::setExclusions(const ExclusionFileName & fileName)
     }
 }
 
-bool Exclusions::isExcluded(const Structures::SourceFiles::FileName & name)
+bool Exclusions::isExcluded(const SourceFiles::FileName & name)
 {
     const Rules::RuleName currentRule = Rules::getCurrentRule();
 
@@ -73,5 +71,4 @@ bool Exclusions::isExcluded(const Structures::SourceFiles::FileName & name)
     }
 }
 
-} // namespace Plugins
 } // namespace Vera

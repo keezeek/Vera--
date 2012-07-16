@@ -19,19 +19,19 @@ if(MSVC)
 endif(MSVC)
 
 add_executable(vera++
+  src/cpptcl-1.1.4/cpptcl.cpp
+  src/Exclusions.cpp
+  src/Interpreter.cpp
+  src/Parameters.cpp
+  src/Profiles.cpp
+  src/Reports.cpp
+  src/RootDirectory.cpp
+  src/Rules.cpp
+  src/Transformations.cpp
+  src/SourceFiles.cpp
+  src/SourceLines.cpp
+  src/Tokens.cpp
   src/main.cpp
-  src/plugins/cpptcl-1.1.4/cpptcl.cpp
-  src/plugins/Exclusions.cpp
-  src/plugins/Interpreter.cpp
-  src/plugins/Parameters.cpp
-  src/plugins/Profiles.cpp
-  src/plugins/Reports.cpp
-  src/plugins/RootDirectory.cpp
-  src/plugins/Rules.cpp
-  src/plugins/Transformations.cpp
-  src/structures/SourceFiles.cpp
-  src/structures/SourceLines.cpp
-  src/structures/Tokens.cpp
   )
 
 target_link_libraries(vera++

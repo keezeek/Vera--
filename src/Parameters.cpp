@@ -12,8 +12,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 typedef std::map<Parameters::ParamName, Parameters::ParamValue> ParametersCollection;
 static ParametersCollection parameters_;
@@ -77,5 +75,4 @@ void Parameters::readFromFile(const FileName & name)
     }
 }
 
-} // namespace Plugins
 } // namespace Vera

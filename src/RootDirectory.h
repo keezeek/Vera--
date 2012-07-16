@@ -12,8 +12,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 class RootDirectory
 {
@@ -25,7 +23,6 @@ public:
     static DirectoryName getRootDirectory();
 };
 
-} // namespace Plugins
 } // namespace Vera
 
 #endif // ROOTDIRECTORY_H_INCLUDED

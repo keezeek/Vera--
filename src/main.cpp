@@ -5,23 +5,24 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "structures/SourceFiles.h"
-#include "plugins/Profiles.h"
-#include "plugins/Rules.h"
-#include "plugins/Exclusions.h"
-#include "plugins/Transformations.h"
-#include "plugins/Parameters.h"
-#include "plugins/Reports.h"
-#include "plugins/RootDirectory.h"
 #include <iostream>
 #include <string>
 #include <vector>
 #include <cstdlib>
 
+#include "SourceFiles.h"
+#include "Profiles.h"
+#include "Rules.h"
+#include "Exclusions.h"
+#include "Transformations.h"
+#include "Parameters.h"
+#include "Reports.h"
+#include "RootDirectory.h"
+
 static const char *programVersion = "Vera++ 1.1.1 (Community Edition)";
 
 // helper function that checks whether the given file name names the C or C++ source file
-static bool isSourceFileName(const Vera::Structures::SourceFiles::FileName& name)
+static bool isSourceFileName(const Vera::SourceFiles::FileName& name)
 {
 	const std::string suffixes[] =
         { ".cpp", ".cxx", ".cc", ".c", ".C", ".h", ".hh", ".hpp", ".hxx", ".ipp" };
@@ -30,9 +31,9 @@ static bool isSourceFileName(const Vera::Structures::SourceFiles::FileName& name
     for (int i = 0; i != numOfSuffixes; ++i)
     {
 		const std::string suf = suffixes[i];
-        const Vera::Structures::SourceFiles::FileName::size_type pos = name.rfind(suf);
+        const Vera::SourceFiles::FileName::size_type pos = name.rfind(suf);
 
-        if (pos != Vera::Structures::SourceFiles::FileName::npos &&
+        if (pos != Vera::SourceFiles::FileName::npos &&
             pos == name.size() - suf.size())
         {
             return true;
@@ -48,7 +49,7 @@ int main(int argc, char* argv[])
 
     try
     {
-		Vera::Plugins::Profiles::ProfileName profile("default");
+		Vera::Profiles::ProfileName profile("default");
 
         // the directory containing the profile and rule definitions
         // by default it is (in this order, first has highest precedence):
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
         // - HOME/.vera (if HOME is defined)
         // - current directory
 
-		Vera::Plugins::RootDirectory::DirectoryName veraRoot(".");
+		Vera::RootDirectory::DirectoryName veraRoot(".");
         char * veraRootEnv = getenv("HOME");
         if (veraRootEnv != NULL)
         {
@@ -69,12 +70,12 @@ int main(int argc, char* argv[])
             veraRoot = veraRootEnv;
         }
 
-        Vera::Plugins::RootDirectory::setRootDirectory(veraRoot);
+        Vera::RootDirectory::setRootDirectory(veraRoot);
 
         // collect all source file names and interpret options
 
-        Vera::Plugins::Rules::RuleName singleRule;
-        Vera::Plugins::Transformations::TransformationName singleTransformation;
+        Vera::Rules::RuleName singleRule;
+        Vera::Transformations::TransformationName singleTransformation;
 
         bool omitDuplicates = false;
 
@@ -120,15 +121,15 @@ int main(int argc, char* argv[])
             else if (arg == "-")
             {
                 // list of source files is provided on stdin
-				Vera::Structures::SourceFiles::FileName name;
+				Vera::SourceFiles::FileName name;
 				while (std::cin >> name)
                 {
-					Vera::Structures::SourceFiles::addFileName(name);
+					Vera::SourceFiles::addFileName(name);
                 }
             }
             else if (arg == "-showrules")
             {
-				Vera::Plugins::Reports::setShowRules(true);
+				Vera::Reports::setShowRules(true);
             }
             else if (arg == "-rule")
             {
@@ -161,8 +162,8 @@ int main(int argc, char* argv[])
                 ++i;
                 if (argv[i] != NULL)
                 {
-					Vera::Plugins::Exclusions::ExclusionFileName file(argv[i]);
-                    Vera::Plugins::Exclusions::setExclusions(file);
+					Vera::Exclusions::ExclusionFileName file(argv[i]);
+                    Vera::Exclusions::setExclusions(file);
                 }
                 else
                 {
@@ -175,8 +176,8 @@ int main(int argc, char* argv[])
                 ++i;
                 if (argv[i] != NULL)
                 {
-					Vera::Plugins::Parameters::ParamAssoc assoc(argv[i]);
-                    Vera::Plugins::Parameters::set(assoc);
+					Vera::Parameters::ParamAssoc assoc(argv[i]);
+                    Vera::Parameters::set(assoc);
                 }
                 else
                 {
@@ -189,8 +190,8 @@ int main(int argc, char* argv[])
                 ++i;
                 if (argv[i] != NULL)
                 {
-                    Vera::Plugins::Parameters::FileName file(argv[i]);
-                    Vera::Plugins::Parameters::readFromFile(file);
+                    Vera::Parameters::FileName file(argv[i]);
+                    Vera::Parameters::readFromFile(file);
                 }
                 else
                 {
@@ -213,7 +214,7 @@ int main(int argc, char* argv[])
             }
             else if (isSourceFileName(arg))
             {
-				Vera::Structures::SourceFiles::addFileName(arg);
+				Vera::SourceFiles::addFileName(arg);
             }
             else
             {
@@ -226,7 +227,7 @@ int main(int argc, char* argv[])
             ++i;
         }
 
-		if (Vera::Structures::SourceFiles::empty())
+		if (Vera::SourceFiles::empty())
         {
 			std::cerr << "vera++: no input files\n";
             exit(exitCodeOnFailure);
@@ -241,19 +242,19 @@ int main(int argc, char* argv[])
                 exit(exitCodeOnFailure);
             }
 
-            Vera::Plugins::Transformations::executeTransformation(singleTransformation);
+            Vera::Transformations::executeTransformation(singleTransformation);
         }
         else if (singleRule.empty() == false)
         {
             // single rule requested
-            Vera::Plugins::Rules::executeRule(singleRule);
+            Vera::Rules::executeRule(singleRule);
         }
         else
         {
-            Vera::Plugins::Profiles::executeProfile(profile);
+            Vera::Profiles::executeProfile(profile);
         }
 
-		Vera::Plugins::Reports::dumpAll(std::cerr, omitDuplicates);
+		Vera::Reports::dumpAll(std::cerr, omitDuplicates);
     }
 	catch (const std::exception& e)
     {

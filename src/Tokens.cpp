@@ -22,8 +22,6 @@
 
 namespace Vera
 {
-namespace Structures
-{
 namespace // unnamed
 {
 
@@ -488,5 +486,4 @@ Tokens::TokenSequence Tokens::getTokens(const SourceFiles::FileName & fileName,
     return ret;
 }
 
-} // namespace Structures
 } // namespace Vera

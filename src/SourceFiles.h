@@ -14,8 +14,6 @@
 
 namespace Vera
 {
-namespace Structures
-{
 
 class SourceFileError: public std::runtime_error
 {
@@ -40,7 +38,6 @@ public:
     static const FileNameSet& getAllFileNames();
 };
 
-} // namespace Structures
 } // namespace Vera
 
 #endif // SOURCEFILES_H_INCLUDED

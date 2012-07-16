@@ -13,8 +13,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 class ProfileError: public std::runtime_error
 {
@@ -33,7 +31,6 @@ public:
     static void executeProfile(const ProfileName& name);
 };
 
-} // namespace Plugins
 } // namespace Vera
 
 #endif // PROFILES_H_INCLUDED

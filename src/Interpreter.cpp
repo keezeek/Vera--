@@ -9,16 +9,14 @@
 #include "Exclusions.h"
 #include "Reports.h"
 #include "Parameters.h"
-#include "../structures/SourceFiles.h"
-#include "../structures/SourceLines.h"
-#include "../structures/Tokens.h"
+#include "SourceFiles.h"
+#include "SourceLines.h"
+#include "Tokens.h"
 #include "cpptcl-1.1.4/cpptcl.h"
 #include <fstream>
 #include <iterator>
 
 namespace Vera
-{
-namespace Plugins
 {
 namespace // unnamed
 {
@@ -42,13 +40,13 @@ Tcl::object getSourceFileNames()
 {
     Tcl::object obj;
 
-    const Structures::SourceFiles::FileNameSet & files = Structures::SourceFiles::getAllFileNames();
+    const SourceFiles::FileNameSet & files = SourceFiles::getAllFileNames();
 
-    typedef Structures::SourceFiles::FileNameSet::const_iterator iterator;
+    typedef SourceFiles::FileNameSet::const_iterator iterator;
     const iterator end = files.end();
     for (iterator it = files.begin(); it != end; ++it)
     {
-        const Structures::SourceFiles::FileName & name = *it;
+        const SourceFiles::FileName & name = *it;
 
         if (Exclusions::isExcluded(name) == false)
         {
@@ -61,21 +59,21 @@ Tcl::object getSourceFileNames()
 
 int getLineCount(const std::string & sourceName)
 {
-    return Structures::SourceLines::getLineCount(sourceName);
+    return SourceLines::getLineCount(sourceName);
 }
 
 std::string getLine(const std::string & sourceName, int lineNumber)
 {
-    return Structures::SourceLines::getLine(sourceName, lineNumber);
+    return SourceLines::getLine(sourceName, lineNumber);
 }
 
 Tcl::object getAllLines(const std::string & sourceName)
 {
     Tcl::object obj;
 
-    const Structures::SourceLines::LineCollection & lines = Structures::SourceLines::getAllLines(sourceName);
+    const SourceLines::LineCollection & lines = SourceLines::getAllLines(sourceName);
 
-    typedef Structures::SourceLines::LineCollection::const_iterator iterator;
+    typedef SourceLines::LineCollection::const_iterator iterator;
     const iterator end = lines.end();
     for (iterator it = lines.begin(); it != end; ++it)
     {
@@ -88,7 +86,7 @@ Tcl::object getAllLines(const std::string & sourceName)
 Tcl::object getTokens(const std::string & sourceName, int fromLine, int fromColumn,
     int toLine, int toColumn, const Tcl::object & filter)
 {
-    Structures::Tokens::FilterSequence filterSeq;
+    Tokens::FilterSequence filterSeq;
 
     size_t filterLength = filter.length(*pInter);
     for (size_t i = 0; i != filterLength; ++i)
@@ -96,12 +94,12 @@ Tcl::object getTokens(const std::string & sourceName, int fromLine, int fromColu
         filterSeq.push_back(filter.at(*pInter, i).get());
     }
 
-    Structures::Tokens::TokenSequence tokenSeq = Structures::Tokens::getTokens(sourceName,
+    Tokens::TokenSequence tokenSeq = Tokens::getTokens(sourceName,
         fromLine, fromColumn, toLine, toColumn, filterSeq);
 
     Tcl::object ret;
-    Structures::Tokens::TokenSequence::iterator it = tokenSeq.begin();
-    Structures::Tokens::TokenSequence::iterator end = tokenSeq.end();
+    Tokens::TokenSequence::iterator it = tokenSeq.begin();
+    Tokens::TokenSequence::iterator end = tokenSeq.end();
     for ( ; it != end; ++it)
     {
         Tcl::object singleToken;
@@ -166,5 +164,4 @@ void Interpreter::execute(const DirectoryName & root,
     inter.eval(scriptBody);
 }
 
-} // namespace Plugins
 } // namespace Vera

@@ -9,8 +9,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 static RootDirectory::DirectoryName root_;
 
@@ -24,5 +22,4 @@ RootDirectory::DirectoryName RootDirectory::getRootDirectory()
     return root_;
 }
 
-} // namespace Plugins
 } // namespace Vera

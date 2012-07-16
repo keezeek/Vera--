@@ -12,8 +12,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 class Rules
 {
@@ -25,7 +23,6 @@ public:
     static RuleName getCurrentRule();
 };
 
-} // namespace Plugins
 } // namespace Vera
 
 #endif // RULES_H_INCLUDED

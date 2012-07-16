@@ -12,8 +12,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 class ScriptError : public std::runtime_error
 {
@@ -34,7 +32,6 @@ public:
         ScriptType type, const ScriptName & name);
 };
 
-} // namespace Plugins
 } // namespace Vera
 
 #endif // INTERPRETER_H_INCLUDED

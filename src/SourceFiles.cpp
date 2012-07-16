@@ -9,8 +9,6 @@
 
 namespace Vera
 {
-namespace Structures
-{
 
 static SourceFiles::FileNameSet files_;
 
@@ -29,5 +27,4 @@ const SourceFiles::FileNameSet & SourceFiles::getAllFileNames()
     return files_;
 }
 
-} // namespace Structures
 } // namespace Vera

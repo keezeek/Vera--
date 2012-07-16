@@ -18,8 +18,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 static std::vector<Rules::RuleName> getListOfScriptNames(const Profiles::ProfileName & profile)
 {
@@ -67,5 +65,4 @@ void Profiles::executeProfile(const ProfileName & profile)
     }
 }
 
-} // namespace Plugins
 } // namespace Vera

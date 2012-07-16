@@ -11,8 +11,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 void Transformations::executeTransformation(const TransformationName& name)
 {
@@ -20,5 +18,4 @@ void Transformations::executeTransformation(const TransformationName& name)
     Interpreter::execute(veraRoot, Interpreter::transformation, name);
 }
 
-} // namespace Plugins
 } // namespace Vera

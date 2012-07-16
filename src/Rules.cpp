@@ -11,8 +11,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 static Rules::RuleName currentRule_;
 
@@ -29,5 +27,4 @@ Rules::RuleName Rules::getCurrentRule()
     return currentRule_;
 }
 
-} // namespace Plugins
 } // namespace Vera

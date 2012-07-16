@@ -12,8 +12,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 typedef std::multimap<int, Reports::Message> FileMessagesCollection;
 typedef std::map<Reports::FileName, FileMessagesCollection> MessagesCollection;
@@ -63,5 +61,4 @@ void Reports::dumpAll(std::ostream& os, bool omitDuplicates)
     }
 }
 
-} // namespace Plugins
 } // namespace Vera

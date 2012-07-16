@@ -14,8 +14,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 class Reports
 {
@@ -30,7 +28,6 @@ public:
     static void dumpAll(std::ostream& os, bool omitDuplicates);
 };
 
-} // namespace Plugins
 } // namespace Vera
 
 #endif // REPORTS_H_INCLUDED

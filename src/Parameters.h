@@ -13,8 +13,6 @@
 
 namespace Vera
 {
-namespace Plugins
-{
 
 class ParametersError: public std::runtime_error
 {
@@ -39,7 +37,6 @@ public:
     static ParamValue get(const ParamName& name, const ParamValue& defaultValue);
 };
 
-} // namespace Plugins
 } // namespace Vera
 
 #endif // PARAMETERS_H_INCLUDED

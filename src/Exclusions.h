@@ -9,12 +9,11 @@
 #define EXCLUSIONS_H_INCLUDED
 
 #include <string>
-#include "../structures/SourceFiles.h"
 #include <stdexcept>
 
+#include "SourceFiles.h"
+
 namespace Vera
-{
-namespace Plugins
 {
 
 class ExclusionError : public std::runtime_error
@@ -30,10 +29,9 @@ public:
 
     static void setExclusions(const ExclusionFileName & name);
 
-    static bool isExcluded(const Structures::SourceFiles::FileName & name);
+    static bool isExcluded(const SourceFiles::FileName & name);
 };
 
-} // namespace Plugins
 } // namespace Vera
 
 #endif // EXCLUSIONS_H_INCLUDED

@@ -13,8 +13,6 @@
 
 namespace Vera
 {
-namespace Structures
-{
 
 class SourceLines
 {
@@ -28,7 +26,6 @@ public:
     static void loadFile(const SourceFiles::FileName& name);
 };
 
-} // namespace Structures
 } // namespace Vera
 
 #endif // SOURCELINES_H_INCLUDED
