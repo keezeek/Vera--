@@ -10,26 +10,18 @@
 #include <sstream>
 #include <map>
 
-
-using namespace std;
-using namespace Vera;
-using namespace Plugins;
-
-
-namespace // unnamed
+namespace Vera
+{
+namespace Plugins
 {
 
-typedef map<Parameters::ParamName, Parameters::ParamValue> ParametersCollection;
+typedef std::map<Parameters::ParamName, Parameters::ParamValue> ParametersCollection;
+static ParametersCollection parameters_;
 
-ParametersCollection parameters_;
-
-} // unnamed namespace
-
-
-void Parameters::set(const ParamAssoc & assoc)
+void Parameters::set(const ParamAssoc& assoc)
 {
-    string::size_type pos = assoc.find("=");
-    if (pos != string::npos)
+	std::string::size_type pos = assoc.find("=");
+	if (pos != std::string::npos)
     {
         ParamName name = assoc.substr(0, pos);
         ParamValue value = assoc.substr(pos + 1);
@@ -38,12 +30,11 @@ void Parameters::set(const ParamAssoc & assoc)
     }
     else
     {
-        ostringstream ss;
+		std::ostringstream ss;
         ss << "Invalid parameter association: " << assoc;
         throw ParametersError(ss.str());
     }
 }
-
 
 Parameters::ParamValue Parameters::get(const ParamName & name, const ParamValue & defaultValue)
 {
@@ -58,18 +49,17 @@ Parameters::ParamValue Parameters::get(const ParamName & name, const ParamValue 
     }
 }
 
-
 void Parameters::readFromFile(const FileName & name)
 {
-    ifstream file(name.c_str());
+	std::ifstream file(name.c_str());
     if (file.is_open() == false)
     {
-        ostringstream ss;
+		std::ostringstream ss;
         ss << "cannot open parameters file " << name;
         throw ParametersError(ss.str());
     }
 
-    string line;
+	std::string line;
     int lineNumber = 0;
     while (getline(file, line))
     {
@@ -86,3 +76,6 @@ void Parameters::readFromFile(const FileName & name)
         }
     }
 }
+
+} // namespace Plugins
+} // namespace Vera

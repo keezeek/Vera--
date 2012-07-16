@@ -10,25 +10,22 @@
 
 #include <string>
 
-
 namespace Vera
 {
 namespace Plugins
 {
-
 
 class RootDirectory
 {
 public:
     typedef std::string DirectoryName;
 
-    static void setRootDirectory(const DirectoryName & name);
+    static void setRootDirectory(const DirectoryName& name);
 
     static DirectoryName getRootDirectory();
 };
 
 } // namespace Plugins
-
 } // namespace Vera
 
 #endif // ROOTDIRECTORY_H_INCLUDED

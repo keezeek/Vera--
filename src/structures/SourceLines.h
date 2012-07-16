@@ -16,21 +16,19 @@ namespace Vera
 namespace Structures
 {
 
-
 class SourceLines
 {
 public:
     typedef std::vector<std::string> LineCollection;
 
-    static const LineCollection & getAllLines(const SourceFiles::FileName & name);
-    static int getLineCount(const SourceFiles::FileName & name);
-    static const std::string & getLine(const SourceFiles::FileName & name, int lineNumber);
+    static const LineCollection& getAllLines(const SourceFiles::FileName& name);
+    static int getLineCount(const SourceFiles::FileName& name);
+    static const std::string& getLine(const SourceFiles::FileName& name, int lineNumber);
 
-    static void loadFile(const SourceFiles::FileName & name);
+    static void loadFile(const SourceFiles::FileName& name);
 };
 
 } // namespace Structures
-
 } // namespace Vera
 
 #endif // SOURCELINES_H_INCLUDED

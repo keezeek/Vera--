@@ -10,23 +10,16 @@
 #include <map>
 #include <utility>
 
-using namespace std;
-using namespace Vera;
-using namespace Plugins;
-
-
-namespace // unnamed
+namespace Vera
+{
+namespace Plugins
 {
 
-typedef multimap<int, Reports::Message> FileMessagesCollection;
-typedef map<Reports::FileName, FileMessagesCollection> MessagesCollection;
+typedef std::multimap<int, Reports::Message> FileMessagesCollection;
+typedef std::map<Reports::FileName, FileMessagesCollection> MessagesCollection;
 
-MessagesCollection messages_;
-
-bool showRules_;
-
-} // unnamed namespace
-
+static MessagesCollection messages_;
+static bool showRules_;
 
 void Reports::setShowRules(bool show)
 {
@@ -41,7 +34,7 @@ void Reports::add(const FileName & name, int lineNumber, const Message & msg)
             showRules_ ? '(' + currentRule + ") " + msg : msg));
 }
 
-void Reports::dumpAll(ostream & os, bool omitDuplicates)
+void Reports::dumpAll(std::ostream& os, bool omitDuplicates)
 {
     for (MessagesCollection::iterator it = messages_.begin(), end = messages_.end();
          it != end; ++it)
@@ -69,3 +62,6 @@ void Reports::dumpAll(ostream & os, bool omitDuplicates)
         }
     }
 }
+
+} // namespace Plugins
+} // namespace Vera

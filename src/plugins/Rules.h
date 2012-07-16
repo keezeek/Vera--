@@ -10,7 +10,6 @@
 
 #include <string>
 
-
 namespace Vera
 {
 namespace Plugins
@@ -21,13 +20,12 @@ class Rules
 public:
     typedef std::string RuleName;
 
-    static void executeRule(const RuleName & name);
+    static void executeRule(const RuleName& name);
 
     static RuleName getCurrentRule();
 };
 
 } // namespace Plugins
-
 } // namespace Vera
 
 #endif // RULES_H_INCLUDED

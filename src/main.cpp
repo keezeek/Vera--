@@ -18,30 +18,21 @@
 #include <vector>
 #include <cstdlib>
 
-using namespace std;
-using namespace Vera;
-using namespace Structures;
-using namespace Plugins;
-
-
-namespace // unnamed
-{
-
-const char *programVersion = "Vera++ 1.1.1 (Community Edition)";
+static const char *programVersion = "Vera++ 1.1.1 (Community Edition)";
 
 // helper function that checks whether the given file name names the C or C++ source file
-bool isSourceFileName(const SourceFiles::FileName & name)
+static bool isSourceFileName(const Vera::Structures::SourceFiles::FileName& name)
 {
-    const string suffixes[] =
+	const std::string suffixes[] =
         { ".cpp", ".cxx", ".cc", ".c", ".C", ".h", ".hh", ".hpp", ".hxx", ".ipp" };
 
-    const int numOfSuffixes = sizeof(suffixes) / sizeof(string);
+	const int numOfSuffixes = sizeof(suffixes) / sizeof(std::string);
     for (int i = 0; i != numOfSuffixes; ++i)
     {
-        const string suf = suffixes[i];
-        const SourceFiles::FileName::size_type pos = name.rfind(suf);
+		const std::string suf = suffixes[i];
+        const Vera::Structures::SourceFiles::FileName::size_type pos = name.rfind(suf);
 
-        if (pos != SourceFiles::FileName::npos &&
+        if (pos != Vera::Structures::SourceFiles::FileName::npos &&
             pos == name.size() - suf.size())
         {
             return true;
@@ -51,16 +42,13 @@ bool isSourceFileName(const SourceFiles::FileName & name)
     return false;
 }
 
-} // unnamed namespace
-
-
-int main(int argc, char * argv[])
+int main(int argc, char* argv[])
 {
     int exitCodeOnFailure = EXIT_FAILURE;
 
     try
     {
-        Profiles::ProfileName profile("default");
+		Vera::Plugins::Profiles::ProfileName profile("default");
 
         // the directory containing the profile and rule definitions
         // by default it is (in this order, first has highest precedence):
@@ -68,7 +56,7 @@ int main(int argc, char * argv[])
         // - HOME/.vera (if HOME is defined)
         // - current directory
 
-        RootDirectory::DirectoryName veraRoot(".");
+		Vera::Plugins::RootDirectory::DirectoryName veraRoot(".");
         char * veraRootEnv = getenv("HOME");
         if (veraRootEnv != NULL)
         {
@@ -81,23 +69,23 @@ int main(int argc, char * argv[])
             veraRoot = veraRootEnv;
         }
 
-        RootDirectory::setRootDirectory(veraRoot);
+        Vera::Plugins::RootDirectory::setRootDirectory(veraRoot);
 
         // collect all source file names and interpret options
 
-        Rules::RuleName singleRule;
-        Transformations::TransformationName singleTransformation;
+        Vera::Plugins::Rules::RuleName singleRule;
+        Vera::Plugins::Transformations::TransformationName singleTransformation;
 
         bool omitDuplicates = false;
 
         int i = 1;
         while (i != argc)
         {
-            const string arg(argv[i]);
+			const std::string arg(argv[i]);
 
             if (arg == "-help")
             {
-                cout << "vera++ [options] [list-of-files]\n\n"
+				std::cout << "vera++ [options] [list-of-files]\n\n"
                     "Recognized options:\n\n"
                     "-                  (a single minus sign) indicates that the list of\n"
                     "                   source file names will be provided on the stdin.\n\n"
@@ -118,7 +106,7 @@ int main(int argc, char * argv[])
             }
             else if (arg == "-version")
             {
-                cout << programVersion << '\n';
+				std::cout << programVersion << '\n';
                 exit(EXIT_SUCCESS);
             }
             else if (arg == "-nofail")
@@ -132,15 +120,15 @@ int main(int argc, char * argv[])
             else if (arg == "-")
             {
                 // list of source files is provided on stdin
-                SourceFiles::FileName name;
-                while (cin >> name)
+				Vera::Structures::SourceFiles::FileName name;
+				while (std::cin >> name)
                 {
-                    SourceFiles::addFileName(name);
+					Vera::Structures::SourceFiles::addFileName(name);
                 }
             }
             else if (arg == "-showrules")
             {
-                Reports::setShowRules(true);
+				Vera::Plugins::Reports::setShowRules(true);
             }
             else if (arg == "-rule")
             {
@@ -151,7 +139,7 @@ int main(int argc, char * argv[])
                 }
                 else
                 {
-                    cerr << "error: option -rule provided with no rule name\n";
+					std::cerr << "error: option -rule provided with no rule name\n";
                     exit(exitCodeOnFailure);
                 }
             }
@@ -164,7 +152,7 @@ int main(int argc, char * argv[])
                 }
                 else
                 {
-                    cerr << "error: option -profile provided with no profile name\n";
+					std::cerr << "error: option -profile provided with no profile name\n";
                     exit(exitCodeOnFailure);
                 }
             }
@@ -173,12 +161,12 @@ int main(int argc, char * argv[])
                 ++i;
                 if (argv[i] != NULL)
                 {
-                    Exclusions::ExclusionFileName file(argv[i]);
-                    Exclusions::setExclusions(file);
+					Vera::Plugins::Exclusions::ExclusionFileName file(argv[i]);
+                    Vera::Plugins::Exclusions::setExclusions(file);
                 }
                 else
                 {
-                    cerr << "error: option -exclusions provided without name of file\n";
+					std::cerr << "error: option -exclusions provided without name of file\n";
                     exit(exitCodeOnFailure);
                 }
             }
@@ -187,12 +175,12 @@ int main(int argc, char * argv[])
                 ++i;
                 if (argv[i] != NULL)
                 {
-                    Parameters::ParamAssoc assoc(argv[i]);
-                    Parameters::set(assoc);
+					Vera::Plugins::Parameters::ParamAssoc assoc(argv[i]);
+                    Vera::Plugins::Parameters::set(assoc);
                 }
                 else
                 {
-                    cerr << "error: option -param provided without name and value\n";
+					std::cerr << "error: option -param provided without name and value\n";
                     exit(exitCodeOnFailure);
                 }
             }
@@ -201,12 +189,12 @@ int main(int argc, char * argv[])
                 ++i;
                 if (argv[i] != NULL)
                 {
-                    Parameters::FileName file(argv[i]);
-                    Parameters::readFromFile(file);
+                    Vera::Plugins::Parameters::FileName file(argv[i]);
+                    Vera::Plugins::Parameters::readFromFile(file);
                 }
                 else
                 {
-                    cerr << "error: option -paramfile provided without name of file\n";
+					std::cerr << "error: option -paramfile provided without name of file\n";
                     exit(exitCodeOnFailure);
                 }
             }
@@ -219,28 +207,28 @@ int main(int argc, char * argv[])
                 }
                 else
                 {
-                    cerr << "error: option -transform provided without name of transformation\n";
+					std::cerr << "error: option -transform provided without name of transformation\n";
                     exit(exitCodeOnFailure);
                 }
             }
             else if (isSourceFileName(arg))
             {
-                SourceFiles::addFileName(arg);
+				Vera::Structures::SourceFiles::addFileName(arg);
             }
             else
             {
                 // the option was not recognized as a name of the source file
                 // or a vera-specific option
 
-                cerr << "error: option " << arg << " not recognized\n";
+				std::cerr << "error: option " << arg << " not recognized\n";
             }
 
             ++i;
         }
 
-        if (SourceFiles::empty())
+		if (Vera::Structures::SourceFiles::empty())
         {
-            cerr << "vera++: no input files\n";
+			std::cerr << "vera++: no input files\n";
             exit(exitCodeOnFailure);
         }
 
@@ -248,28 +236,28 @@ int main(int argc, char * argv[])
         {
             if (singleRule.empty() == false || profile != "default")
             {
-                cerr <<
+				std::cerr <<
                     "error: transformation cannot be specified together with rules or profiles\n";
                 exit(exitCodeOnFailure);
             }
 
-            Transformations::executeTransformation(singleTransformation);
+            Vera::Plugins::Transformations::executeTransformation(singleTransformation);
         }
         else if (singleRule.empty() == false)
         {
             // single rule requested
-            Rules::executeRule(singleRule);
+            Vera::Plugins::Rules::executeRule(singleRule);
         }
         else
         {
-            Profiles::executeProfile(profile);
+            Vera::Plugins::Profiles::executeProfile(profile);
         }
 
-        Reports::dumpAll(cerr, omitDuplicates);
+		Vera::Plugins::Reports::dumpAll(std::cerr, omitDuplicates);
     }
-    catch (const exception & e)
+	catch (const std::exception& e)
     {
-        cerr << "error: " << e.what() << '\n';
+		std::cerr << "error: " << e.what() << '\n';
         exit(exitCodeOnFailure);
     }
 }

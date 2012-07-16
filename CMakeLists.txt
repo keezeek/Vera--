@@ -6,8 +6,17 @@ project(Vera++)
 find_package(TCL)
 include_directories(${TCL_INCLUDE_PATH})
 
+set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost REQUIRED COMPONENTS system wave)
 include_directories(${Boost_INCLUDE_DIRS})
+
+add_definitions(-DBOOST_ALL_NO_LIB=1)
+if(MSVC)
+  add_definitions(
+    -D_CRT_SECURE_NO_WARNINGS
+    -D_SCL_SECURE_NO_WARNINGS
+    )
+endif(MSVC)
 
 add_executable(vera++
   src/main.cpp
@@ -25,4 +34,7 @@ add_executable(vera++
   src/structures/Tokens.cpp
   )
 
-target_link_libraries(vera++ ${TCL_LIBRARY} ${Boost_LIBRARIES})
+target_link_libraries(vera++
+  ${TCL_LIBRARY}
+  ${Boost_LIBRARIES}
+  )

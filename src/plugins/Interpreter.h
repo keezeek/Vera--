@@ -10,12 +10,10 @@
 
 #include <stdexcept>
 
-
 namespace Vera
 {
 namespace Plugins
 {
-
 
 class ScriptError : public std::runtime_error
 {
@@ -37,7 +35,6 @@ public:
 };
 
 } // namespace Plugins
-
 } // namespace Vera
 
 #endif // INTERPRETER_H_INCLUDED

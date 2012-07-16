@@ -12,12 +12,10 @@
 #include <string>
 #include <ostream>
 
-
 namespace Vera
 {
 namespace Plugins
 {
-
 
 class Reports
 {
@@ -27,13 +25,12 @@ public:
 
     static void setShowRules(bool show);
 
-    static void add(const FileName & name, int lineNumber, const Message & msg);
+    static void add(const FileName& name, int lineNumber, const Message& msg);
 
-    static void dumpAll(std::ostream & os, bool omitDuplicates);
+    static void dumpAll(std::ostream& os, bool omitDuplicates);
 };
 
 } // namespace Plugins
-
 } // namespace Vera
 
 #endif // REPORTS_H_INCLUDED

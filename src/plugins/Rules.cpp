@@ -9,20 +9,14 @@
 #include "RootDirectory.h"
 #include "Interpreter.h"
 
-using namespace std;
-using namespace Vera;
-using namespace Plugins;
-
-
-namespace // unnamed
+namespace Vera
+{
+namespace Plugins
 {
 
-Rules::RuleName currentRule_;
+static Rules::RuleName currentRule_;
 
-} // unnamed namespace
-
-
-void Rules::executeRule(const RuleName & name)
+void Rules::executeRule(const RuleName& name)
 {
     currentRule_ = name;
 
@@ -34,3 +28,6 @@ Rules::RuleName Rules::getCurrentRule()
 {
     return currentRule_;
 }
+
+} // namespace Plugins
+} // namespace Vera

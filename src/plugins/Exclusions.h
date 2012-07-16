@@ -12,7 +12,6 @@
 #include "../structures/SourceFiles.h"
 #include <stdexcept>
 
-
 namespace Vera
 {
 namespace Plugins
@@ -35,7 +34,6 @@ public:
 };
 
 } // namespace Plugins
-
 } // namespace Vera
 
 #endif // EXCLUSIONS_H_INCLUDED

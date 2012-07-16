@@ -7,18 +7,12 @@
 
 #include "SourceFiles.h"
 
-using namespace std;
-using namespace Vera;
-using namespace Vera::Structures;
-
-
-namespace // unnamed
+namespace Vera
+{
+namespace Structures
 {
 
-SourceFiles::FileNameSet files_;
-
-} // unnamed namespace
-
+static SourceFiles::FileNameSet files_;
 
 void SourceFiles::addFileName(const FileName & name)
 {
@@ -34,3 +28,6 @@ const SourceFiles::FileNameSet & SourceFiles::getAllFileNames()
 {
     return files_;
 }
+
+} // namespace Structures
+} // namespace Vera

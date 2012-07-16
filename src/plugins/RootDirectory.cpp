@@ -7,18 +7,12 @@
 
 #include "RootDirectory.h"
 
-using namespace std;
-using namespace Vera;
-using namespace Plugins;
-
-
-namespace // unnamed
+namespace Vera
+{
+namespace Plugins
 {
 
-RootDirectory::DirectoryName root_;
-
-} // unnamed namespace
-
+static RootDirectory::DirectoryName root_;
 
 void RootDirectory::setRootDirectory(const DirectoryName & name)
 {
@@ -29,3 +23,6 @@ RootDirectory::DirectoryName RootDirectory::getRootDirectory()
 {
     return root_;
 }
+
+} // namespace Plugins
+} // namespace Vera

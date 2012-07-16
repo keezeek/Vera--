@@ -12,16 +12,18 @@
 #include <string>
 #include <vector>
 
-
 namespace Vera
 {
 namespace Structures
 {
 
-class TokensError : public std::runtime_error
+class TokensError: public std::runtime_error
 {
 public:
-    TokensError(const std::string & msg) : std::runtime_error(msg) {}
+    TokensError(const std::string & msg) :
+            std::runtime_error(msg)
+    {
+    }
 };
 
 class Tokens
@@ -31,8 +33,10 @@ public:
 
     struct SingleToken
     {
-        SingleToken(const std::string & v, int ln, int cl, const std::string & n)
-            : value_(v), line_(ln), column_(cl), name_(n) {}
+        SingleToken(const std::string& v, int ln, int cl, const std::string& n) :
+                value_(v), line_(ln), column_(cl), name_(n)
+        {
+        }
 
         std::string value_;
         int line_;
@@ -41,9 +45,7 @@ public:
     };
 
     typedef std::vector<SingleToken> TokenSequence;
-
     typedef std::string TokenFilter;
-
     typedef std::vector<TokenFilter> FilterSequence;
 
     static void parse(const SourceFiles::FileName & name, const FileContent & src);
@@ -54,7 +56,6 @@ public:
 };
 
 } // namespace Structures
-
 } // namespace Vera
 
 #endif // TOKENS_H_INCLUDED

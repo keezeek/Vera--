@@ -10,23 +10,20 @@
 
 #include <string>
 
-
 namespace Vera
 {
 namespace Plugins
 {
-
 
 class Transformations
 {
 public:
     typedef std::string TransformationName;
 
-    static void executeTransformation(const TransformationName & name);
+    static void executeTransformation(const TransformationName& name);
 };
 
 } // namespace Plugins
-
 } // namespace Vera
 
 #endif // TRANSFORMATIONS_H_INCLUDED

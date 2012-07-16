@@ -11,17 +11,18 @@
 #include <string>
 #include <stdexcept>
 
-
 namespace Vera
 {
 namespace Plugins
 {
 
-
-class ProfileError : public std::runtime_error
+class ProfileError: public std::runtime_error
 {
 public:
-    ProfileError(const std::string & msg) : std::runtime_error(msg) {}
+    ProfileError(const std::string & msg) :
+            std::runtime_error(msg)
+    {
+    }
 };
 
 class Profiles
@@ -29,11 +30,10 @@ class Profiles
 public:
     typedef std::string ProfileName;
 
-    static void executeProfile(const ProfileName & name);
+    static void executeProfile(const ProfileName& name);
 };
 
 } // namespace Plugins
-
 } // namespace Vera
 
 #endif // PROFILES_H_INCLUDED

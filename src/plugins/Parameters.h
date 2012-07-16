@@ -11,19 +11,19 @@
 #include <string>
 #include <stdexcept>
 
-
 namespace Vera
 {
 namespace Plugins
 {
 
-
-class ParametersError : public std::runtime_error
+class ParametersError: public std::runtime_error
 {
 public:
-    ParametersError(const std::string & msg) : std::runtime_error(msg) {}
+    ParametersError(const std::string & msg) :
+            std::runtime_error(msg)
+    {
+    }
 };
-
 
 class Parameters
 {
@@ -33,14 +33,13 @@ public:
     typedef std::string ParamAssoc;
     typedef std::string FileName;
 
-    static void set(const ParamAssoc & assoc);
-    static void readFromFile(const FileName & name);
+    static void set(const ParamAssoc& assoc);
+    static void readFromFile(const FileName& name);
 
-    static ParamValue get(const ParamName & name, const ParamValue & defaultValue);
+    static ParamValue get(const ParamName& name, const ParamValue& defaultValue);
 };
 
 } // namespace Plugins
-
 } // namespace Vera
 
 #endif // PARAMETERS_H_INCLUDED
