@@ -25,16 +25,17 @@ namespace Vera
 namespace // unnamed
 {
 
-typedef std::vector<std::string> PhysicalTokenCollection;
-PhysicalTokenCollection physicalTokens;
+static std::vector<std::string> physicalTokens;
 
 struct TokenRef
 {
-    TokenRef(boost::wave::token_id id, int line, int column, int length)
-        : id_(id), line_(line), column_(column), length_(length), index_(-1) {}
+    TokenRef(boost::wave::token_id id, int line, int column, int length) :
+            id_(id), line_(line), column_(column), length_(length), index_(-1)
+    {
+    }
 
-	TokenRef(boost::wave::token_id id, int line, int column, int length, const std::string & value)
-        : id_(id), line_(line), column_(column), length_(length)
+    TokenRef(boost::wave::token_id id, int line, int column, int length, const std::string& value) :
+            id_(id), line_(line), column_(column), length_(length)
     {
         // newline is optimized as the most common case
 
@@ -48,7 +49,7 @@ struct TokenRef
         }
     }
 
-	std::string getTokenValue(const SourceFiles::FileName & fileName) const
+	std::string getTokenValue(const std::string& fileName) const
     {
         if (id_ == boost::wave::T_NEWLINE)
         {
@@ -59,13 +60,11 @@ struct TokenRef
             // token value stored in the physicalTokens structure
             // (this is used with line continuation and other cases
             // where the token has no representation in physical lines)
-
             return physicalTokens[static_cast<size_t>(index_)];
         }
         else
         {
             // token value has to be retrieved from the physical line collection
-
             return SourceLines::getLine(fileName, line_).substr(column_, length_);
         }
     }
@@ -83,15 +82,15 @@ struct TokenRef
 
 typedef std::vector<TokenRef> TokenCollection;
 
-typedef std::map<SourceFiles::FileName, TokenCollection> FileTokenCollection;
+typedef std::map<std::string, TokenCollection> FileTokenCollection;
 
 FileTokenCollection fileTokens_;
 
 typedef std::vector<boost::function<bool(boost::wave::token_id)> > CompiledFilterSequence;
 
-boost::wave::token_id tokenIdFromTokenFilter(const Tokens::TokenFilter & filter)
+boost::wave::token_id tokenIdFromTokenFilter(const std::string& filter)
 {
-    typedef std::map<Tokens::TokenFilter, boost::wave::token_id> TokenFilterToIdMap;
+    typedef std::map<std::string, boost::wave::token_id> TokenFilterToIdMap;
 
     static TokenFilterToIdMap tokenMap;
     if (tokenMap.empty())
@@ -271,7 +270,7 @@ boost::wave::token_id tokenIdFromTokenFilter(const Tokens::TokenFilter & filter)
     }
     else
     {
-        throw TokensError("unknown token filter requested");
+        throw std::runtime_error("unknown token filter requested");
     }
 }
 
@@ -285,7 +284,7 @@ bool matchTokenBaseId(boost::wave::token_id id, boost::wave::token_id ref)
     return BASEID_FROM_TOKEN(id) == ref;
 }
 
-CompiledFilterSequence prepareCompiledFilter(const Tokens::FilterSequence & filterSeq)
+CompiledFilterSequence prepareCompiledFilter(const std::vector<std::string>& filterSeq)
 {
     CompiledFilterSequence ret;
 
@@ -296,8 +295,8 @@ CompiledFilterSequence prepareCompiledFilter(const Tokens::FilterSequence & filt
     }
     else
     {
-        Tokens::FilterSequence::const_iterator it = filterSeq.begin();
-        const Tokens::FilterSequence::const_iterator end = filterSeq.end();
+        std::vector<std::string>::const_iterator it = filterSeq.begin();
+        const std::vector<std::string>::const_iterator end = filterSeq.end();
 
         for ( ; it != end; ++it)
         {
@@ -308,7 +307,7 @@ CompiledFilterSequence prepareCompiledFilter(const Tokens::FilterSequence & filt
     return ret;
 }
 
-bool match(const CompiledFilterSequence & compiledFilter, boost::wave::token_id id)
+bool match(const CompiledFilterSequence& compiledFilter, boost::wave::token_id id)
 {
     CompiledFilterSequence::const_iterator it = compiledFilter.begin();
     const CompiledFilterSequence::const_iterator end = compiledFilter.end();
@@ -326,14 +325,14 @@ bool match(const CompiledFilterSequence & compiledFilter, boost::wave::token_id 
 
 struct LineNumberComparator
 {
-    bool operator()(const TokenRef & left, const TokenRef & right) const
+    bool operator()(const TokenRef& left, const TokenRef& right) const
     {
         return left.line_ < right.line_;
     }
 };
 
-void findRange(const TokenCollection & tokens, int fromLine, int toLine,
-    TokenCollection::const_iterator & beg, TokenCollection::const_iterator & end)
+void findRange(const TokenCollection& tokens, int fromLine, int toLine,
+    TokenCollection::const_iterator& beg, TokenCollection::const_iterator& end)
 {
     const TokenRef tokenToCompareFrom(boost::wave::token_id(), fromLine, 0, 0);
     beg = lower_bound(tokens.begin(), tokens.end(), tokenToCompareFrom, LineNumberComparator());
@@ -352,9 +351,9 @@ void findRange(const TokenCollection & tokens, int fromLine, int toLine,
 } // unnamed namespace
 
 
-void Tokens::parse(const SourceFiles::FileName & name, const FileContent & src)
+void Tokens::parse(const std::string& name, const std::string& src)
 {
-    TokenCollection & tokensInFile = fileTokens_[name];
+    TokenCollection& tokensInFile = fileTokens_[name];
 
     // boost::wave throws exceptions when given an empty file
     if (src.empty() == false)
@@ -389,7 +388,7 @@ void Tokens::parse(const SourceFiles::FileName & name, const FileContent & src)
                 }
                 else
                 {
-                    const std::string & sourceLine = SourceLines::getLine(name, line);
+                    const std::string& sourceLine = SourceLines::getLine(name, line);
                     if (column > static_cast<int>(sourceLine.size()) ||
                         value != sourceLine.substr(column, length))
                     {
@@ -412,26 +411,26 @@ void Tokens::parse(const SourceFiles::FileName & name, const FileContent & src)
                 }
             }
         }
-        catch (const boost::wave::cpplexer::cpplexer_exception & e)
+        catch (const boost::wave::cpplexer::cpplexer_exception& e)
         {
             std::ostringstream ss;
             ss << name << ':' << e.line_no() << ": illegal token in column " << e.column_no()
                 << ", giving up (hint: fix the file or remove it from the working set)";
-            throw TokensError(ss.str());
+            throw std::runtime_error(ss.str());
         }
     }
 }
 
-Tokens::TokenSequence Tokens::getTokens(const SourceFiles::FileName & fileName,
+Tokens::TokenSequence Tokens::getTokens(const std::string& fileName,
     int fromLine, int fromColumn, int toLine, int toColumn,
-    const FilterSequence & filter)
+    const std::vector<std::string>& filter)
 {
     if ((fromLine < 1) ||
         (fromColumn < 0) ||
-        (toLine > 0 && fromLine > toLine) ||
-        (fromLine == toLine && toColumn >= 0 && fromColumn > toColumn))
+        (toLine > 0&& fromLine > toLine) ||
+        (fromLine == toLine&& toColumn >= 0&& fromColumn > toColumn))
     {
-        throw TokensError("illegal range of tokens requested by the script");
+        throw std::runtime_error("illegal range of tokens requested by the script");
     }
 
     {
@@ -448,7 +447,7 @@ Tokens::TokenSequence Tokens::getTokens(const SourceFiles::FileName & fileName,
 
     const CompiledFilterSequence compiledFilter = prepareCompiledFilter(filter);
 
-    const TokenCollection & tokensInFile = fileTokens_[fileName];
+    const TokenCollection& tokensInFile = fileTokens_[fileName];
 
     TokenSequence ret;
 
@@ -459,13 +458,13 @@ Tokens::TokenSequence Tokens::getTokens(const SourceFiles::FileName & fileName,
 
     for (TokenCollection::const_iterator it = begin; it != end; ++it)
     {
-        const TokenRef & token = *it;
+        const TokenRef& token = *it;
 
         const int line = token.line_;
         const int column = token.column_;
 
-        if ((line > fromLine || (line == fromLine && column >= fromColumn)) &&
-            (toLine <= 0 || (line < toLine || (line == toLine && column < toColumn))))
+        if ((line > fromLine || (line == fromLine&& column >= fromColumn))&&
+            (toLine <= 0 || (line < toLine || (line == toLine&& column < toColumn))))
         {
             if (match(compiledFilter, token.id_))
             {

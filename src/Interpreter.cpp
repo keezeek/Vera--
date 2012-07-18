@@ -6,15 +6,24 @@
 //
 
 #include "Interpreter.h"
-#include "Exclusions.h"
 #include "Reports.h"
 #include "Parameters.h"
-#include "SourceFiles.h"
 #include "SourceLines.h"
 #include "Tokens.h"
 #include "cpptcl-1.1.4/cpptcl.h"
+#include "globals.hpp"
+
+#include <iostream>
 #include <fstream>
 #include <iterator>
+#include <boost/foreach.hpp>
+#include <luabind/luabind.hpp>
+#include <luabind/iterator_policy.hpp>
+
+extern "C"
+{
+#include "lualib.h"
+}
 
 namespace Vera
 {
@@ -26,67 +35,64 @@ namespace // unnamed
 
 Tcl::interpreter *pInter;
 
-void report(const std::string & fileName, int lineNumber, const std::string & message)
+void report_(const std::string& fileName, int lineNumber, const std::string& message)
 {
-    Reports::add(fileName, lineNumber, message);
+    vera::report.add(fileName, lineNumber, message);
 }
 
-std::string getParameter(const std::string & name, const std::string & defaultValue)
+std::string getParameter(const std::string& name, const std::string& defaultValue)
 {
     return Parameters::get(name, defaultValue);
+}
+
+const std::vector<std::string>& get_files()
+{
+    return vera::input_files;
+}
+
+const std::vector<std::string>& get_lines(const std::string& sourceName)
+{
+    return SourceLines::getAllLines(sourceName);
 }
 
 Tcl::object getSourceFileNames()
 {
     Tcl::object obj;
 
-    const SourceFiles::FileNameSet & files = SourceFiles::getAllFileNames();
-
-    typedef SourceFiles::FileNameSet::const_iterator iterator;
-    const iterator end = files.end();
-    for (iterator it = files.begin(); it != end; ++it)
+    BOOST_FOREACH(std::string name, vera::input_files)
     {
-        const SourceFiles::FileName & name = *it;
-
-        if (Exclusions::isExcluded(name) == false)
-        {
-            obj.append(*pInter, Tcl::object(name));
-        }
+        obj.append(*pInter, Tcl::object(name));
     }
 
     return obj;
 }
 
-int getLineCount(const std::string & sourceName)
+int getLineCount(const std::string& sourceName)
 {
     return SourceLines::getLineCount(sourceName);
 }
 
-std::string getLine(const std::string & sourceName, int lineNumber)
+std::string getLine(const std::string& sourceName, int lineNumber)
 {
     return SourceLines::getLine(sourceName, lineNumber);
 }
 
-Tcl::object getAllLines(const std::string & sourceName)
+Tcl::object getAllLines(const std::string& sourceName)
 {
     Tcl::object obj;
 
-    const SourceLines::LineCollection & lines = SourceLines::getAllLines(sourceName);
-
-    typedef SourceLines::LineCollection::const_iterator iterator;
-    const iterator end = lines.end();
-    for (iterator it = lines.begin(); it != end; ++it)
+    BOOST_FOREACH(std::string line, SourceLines::getAllLines(sourceName))
     {
-        obj.append(*pInter, Tcl::object(*it));
+        obj.append(*pInter, Tcl::object(line));
     }
 
     return obj;
 }
 
-Tcl::object getTokens(const std::string & sourceName, int fromLine, int fromColumn,
-    int toLine, int toColumn, const Tcl::object & filter)
+Tcl::object getTokens(const std::string& sourceName, int fromLine, int fromColumn,
+    int toLine, int toColumn, const Tcl::object& filter)
 {
-    Tokens::FilterSequence filterSeq;
+    std::vector<std::string> filterSeq;
 
     size_t filterLength = filter.length(*pInter);
     for (size_t i = 0; i != filterLength; ++i)
@@ -114,12 +120,12 @@ Tcl::object getTokens(const std::string & sourceName, int fromLine, int fromColu
     return ret;
 }
 
-void registerCommands(Tcl::interpreter & inter)
+void registerCommands(Tcl::interpreter& inter)
 {
-    pInter = &inter;
+    pInter =&inter;
 
     // commands related to source files and plain source code
-    inter.def("report", report);
+    inter.def("report", report_);
     inter.def("getParameter", getParameter);
     inter.def("getSourceFileNames", getSourceFileNames);
     inter.def("getLineCount", getLineCount);
@@ -131,37 +137,28 @@ void registerCommands(Tcl::interpreter & inter)
 } // unnamed namespace
 
 
-void Interpreter::execute(const DirectoryName & root,
-    ScriptType type, const ScriptName & name)
+void Interpreter::execute(const std::string& name)
 {
-    std::string fileName = root + "/scripts/";
-    switch (type)
+    lua_State* L = luaL_newstate();
+    luaL_openlibs(L);
+    luabind::open(L);
+
+    luabind::module(L, "vera")
+    [
+        luabind::def("input_files", &get_files, luabind::return_stl_iterator),
+        luabind::def("get_lines", &get_lines, luabind::return_stl_iterator),
+        luabind::def("report", &report_),
+        luabind::def("line_count", &SourceLines::getLineCount),
+        luabind::def("get_line", &SourceLines::getLine)
+    ];
+
+	boost::filesystem::path fileName(vera::root_dir / "scripts" / (name + ".lua"));
+    if (luaL_dofile(L, fileName.string().c_str()))
     {
-    case rule:
-        fileName += "rules/";
-        break;
-    case transformation:
-        fileName += "transformations/";
-        break;
+        throw std::runtime_error(lua_tostring(L, lua_gettop(L)));
     }
 
-    fileName += name;
-    fileName += ".tcl";
-
-    std::ifstream scriptFile(fileName.c_str());
-    if (scriptFile.is_open() == false)
-    {
-        std::ostringstream ss;
-        ss << "cannot open script " << fileName;
-        throw ScriptError(ss.str());
-    }
-
-    std::string scriptBody;
-    scriptBody.assign(std::istreambuf_iterator<char>(scriptFile), std::istreambuf_iterator<char>());
-
-    Tcl::interpreter inter;
-    registerCommands(inter);
-    inter.eval(scriptBody);
+    lua_close(L); // TODO: fix leak!
 }
 
 } // namespace Vera

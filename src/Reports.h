@@ -5,29 +5,38 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef REPORTS_H_INCLUDED
-#define REPORTS_H_INCLUDED
+#ifndef VERA_REPORT_HPP
+#define VERA_REPORT_HPP
 
-#include "Reports.h"
 #include <string>
-#include <ostream>
+#include <iosfwd>
+#include <map>
 
 namespace Vera
 {
 
-class Reports
+class report
 {
 public:
-    typedef std::string FileName;
-    typedef std::string Message;
+    explicit report(bool omit_duplicates) :
+            omit_duplicates(omit_duplicates)
+    {
+    }
 
-    static void setShowRules(bool show);
+    void add(std::string name, int lineNumber, const std::string& msg);
 
-    static void add(const FileName& name, int lineNumber, const Message& msg);
+    typedef std::multimap<int, std::string> FileMessagesCollection;
+    typedef std::map<std::string, FileMessagesCollection> MessagesCollection;
 
-    static void dumpAll(std::ostream& os, bool omitDuplicates);
+private:
+    friend std::ostream& operator<<(std::ostream& os, const Vera::report& report);
+
+public:
+    bool omit_duplicates;
+
+    MessagesCollection messages_;
 };
 
 } // namespace Vera
 
-#endif // REPORTS_H_INCLUDED
+#endif /* VERA_REPORT_HPP */

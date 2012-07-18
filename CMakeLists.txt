@@ -3,12 +3,14 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(Vera++)
 
-find_package(TCL)
-include_directories(${TCL_INCLUDE_PATH})
-
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost REQUIRED COMPONENTS system wave)
-include_directories(${Boost_INCLUDE_DIRS})
+find_package(Boost REQUIRED COMPONENTS
+  filesystem
+  program_options
+  system
+  wave
+  )
+find_package(Lua51 REQUIRED)
 
 add_definitions(-DBOOST_ALL_NO_LIB=1)
 if(MSVC)
@@ -18,23 +20,57 @@ if(MSVC)
     )
 endif(MSVC)
 
-add_executable(vera++
-  src/cpptcl-1.1.4/cpptcl.cpp
-  src/Exclusions.cpp
+include_directories(
+  ${Boost_INCLUDE_DIRS}
+  ${LUA_INCLUDE_DIR}
+  luabind
+  )
+
+set(vera_src
   src/Interpreter.cpp
+  src/Interpreter.h
   src/Parameters.cpp
-  src/Profiles.cpp
+  src/Parameters.h
   src/Reports.cpp
-  src/RootDirectory.cpp
-  src/Rules.cpp
-  src/Transformations.cpp
-  src/SourceFiles.cpp
+  src/Reports.h
   src/SourceLines.cpp
+  src/SourceLines.h
   src/Tokens.cpp
+  src/Tokens.h
   src/main.cpp
   )
 
+set(luabind_src
+  luabind/src/class_info.cpp
+  luabind/src/class_registry.cpp
+  luabind/src/class_rep.cpp
+  luabind/src/class.cpp
+  luabind/src/create_class.cpp
+  luabind/src/error.cpp
+  luabind/src/exception_handler.cpp
+  luabind/src/function.cpp
+  luabind/src/inheritance.cpp
+  luabind/src/link_compatibility.cpp
+  luabind/src/object_rep.cpp
+  luabind/src/open.cpp
+  luabind/src/pcall.cpp
+  luabind/src/scope.cpp
+  luabind/src/stack_content_by_name.cpp
+  luabind/src/weak_ref.cpp
+  luabind/src/wrapper_base.cpp
+  )
+
+add_executable(vera++
+  ${vera_src}
+  ${luabind_src}
+  )
+
 target_link_libraries(vera++
-  ${TCL_LIBRARY}
+  ${LUA_LIBRARIES}
   ${Boost_LIBRARIES}
+  )
+
+add_custom_target(selfcheck
+  COMMAND vera++ --root-dir=${CMAKE_SOURCE_DIR} ${vera_src}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )

@@ -6,59 +6,39 @@
 //
 
 #include "Reports.h"
-#include "Rules.h"
-#include <map>
-#include <utility>
+#include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
 
-namespace Vera
+void Vera::report::add(std::string name, int lineNumber, const std::string& msg)
 {
-
-typedef std::multimap<int, Reports::Message> FileMessagesCollection;
-typedef std::map<Reports::FileName, FileMessagesCollection> MessagesCollection;
-
-static MessagesCollection messages_;
-static bool showRules_;
-
-void Reports::setShowRules(bool show)
-{
-    showRules_ = show;
+    name = boost::filesystem::absolute(name).string();
+    messages_[name].insert(std::make_pair(lineNumber, msg));
 }
 
-void Reports::add(const FileName & name, int lineNumber, const Message & msg)
+std::ostream& Vera::operator<<(std::ostream& os, const Vera::report& report)
 {
-    const Rules::RuleName currentRule = Rules::getCurrentRule();
-
-    messages_[name].insert(make_pair(lineNumber,
-            showRules_ ? '(' + currentRule + ") " + msg : msg));
-}
-
-void Reports::dumpAll(std::ostream& os, bool omitDuplicates)
-{
-    for (MessagesCollection::iterator it = messages_.begin(), end = messages_.end();
-         it != end; ++it)
+    BOOST_FOREACH(const Vera::report::MessagesCollection::value_type& it, report.messages_)
     {
-        const FileName & name = it->first;
-        FileMessagesCollection & fileMessages = it->second;
-
-        FileMessagesCollection::iterator fit = fileMessages.begin();
-        FileMessagesCollection::iterator fend = fileMessages.end();
+        const std::string& name = it.first;
 
         int lastLineNumber = 0;
-        Message lastMsg;
-        for ( ; fit != fend; ++fit)
-        {
-            int lineNumber = fit->first;
-            const Message & msg = fit->second;
+        std::string lastMsg;
 
-            if (omitDuplicates == false || lineNumber != lastLineNumber || msg != lastMsg)
+        BOOST_FOREACH(const Vera::report::FileMessagesCollection::value_type& fit, it.second)
+        {
+            int lineNumber = fit.first;
+            const std::string& msg = fit.second;
+
+            if (!report.omit_duplicates || lineNumber != lastLineNumber || msg != lastMsg)
             {
-                os << name << ':' << lineNumber << ": " << msg << '\n';
+                //os << name << ':' << lineNumber << ": " << msg << '\n';
+                os << name << '(' << lineNumber << ") : " << msg << '\n';
 
                 lastLineNumber = lineNumber;
                 lastMsg = msg;
             }
         }
     }
-}
 
-} // namespace Vera
+    return os;
+}

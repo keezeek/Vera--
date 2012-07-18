@@ -13,28 +13,28 @@
 namespace Vera
 {
 
-typedef std::map<Parameters::ParamName, Parameters::ParamValue> ParametersCollection;
+typedef std::map<std::string, std::string> ParametersCollection;
 static ParametersCollection parameters_;
 
-void Parameters::set(const ParamAssoc& assoc)
+void Parameters::set(const std::string& assoc)
 {
-	std::string::size_type pos = assoc.find("=");
-	if (pos != std::string::npos)
+    std::string::size_type pos = assoc.find("=");
+    if (pos != std::string::npos)
     {
-        ParamName name = assoc.substr(0, pos);
-        ParamValue value = assoc.substr(pos + 1);
+        std::string name = assoc.substr(0, pos);
+        std::string value = assoc.substr(pos + 1);
 
         parameters_[name] = value;
     }
     else
     {
-		std::ostringstream ss;
+        std::ostringstream ss;
         ss << "Invalid parameter association: " << assoc;
-        throw ParametersError(ss.str());
+        throw std::runtime_error(ss.str());
     }
 }
 
-Parameters::ParamValue Parameters::get(const ParamName & name, const ParamValue & defaultValue)
+std::string Parameters::get(const std::string& name, const std::string& defaultValue)
 {
     ParametersCollection::iterator it = parameters_.find(name);
     if (it != parameters_.end())
@@ -47,17 +47,17 @@ Parameters::ParamValue Parameters::get(const ParamName & name, const ParamValue 
     }
 }
 
-void Parameters::readFromFile(const FileName & name)
+void Parameters::readFromFile(const std::string& name)
 {
-	std::ifstream file(name.c_str());
+    std::ifstream file(name.c_str());
     if (file.is_open() == false)
     {
-		std::ostringstream ss;
+        std::ostringstream ss;
         ss << "cannot open parameters file " << name;
-        throw ParametersError(ss.str());
+        throw std::runtime_error(ss.str());
     }
 
-	std::string line;
+    std::string line;
     int lineNumber = 0;
     while (getline(file, line))
     {

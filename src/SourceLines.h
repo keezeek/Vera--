@@ -8,22 +8,19 @@
 #ifndef SOURCELINES_H_INCLUDED
 #define SOURCELINES_H_INCLUDED
 
-#include "SourceFiles.h"
+#include "Reports.h"
 #include <vector>
 
 namespace Vera
 {
 
-class SourceLines
+struct SourceLines
 {
-public:
-    typedef std::vector<std::string> LineCollection;
+    static const std::vector<std::string>& getAllLines(const std::string& name);
+    static int getLineCount(const std::string& name);
+    static const std::string& getLine(const std::string& name, int lineNumber);
 
-    static const LineCollection& getAllLines(const SourceFiles::FileName& name);
-    static int getLineCount(const SourceFiles::FileName& name);
-    static const std::string& getLine(const SourceFiles::FileName& name, int lineNumber);
-
-    static void loadFile(const SourceFiles::FileName& name);
+    static void loadFile(const std::string& name);
 };
 
 } // namespace Vera

@@ -6,259 +6,130 @@
 //
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <cstdlib>
+#include <boost/program_options.hpp>
+#include <boost/foreach.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/filesystem.hpp>
 
-#include "SourceFiles.h"
-#include "Profiles.h"
-#include "Rules.h"
-#include "Exclusions.h"
-#include "Transformations.h"
+#include "Interpreter.h"
 #include "Parameters.h"
 #include "Reports.h"
-#include "RootDirectory.h"
+#include "globals.hpp"
 
-static const char *programVersion = "Vera++ 1.1.1 (Community Edition)";
+namespace po = boost::program_options;
 
-// helper function that checks whether the given file name names the C or C++ source file
-static bool isSourceFileName(const Vera::SourceFiles::FileName& name)
+namespace vera
 {
-	const std::string suffixes[] =
-        { ".cpp", ".cxx", ".cc", ".c", ".C", ".h", ".hh", ".hpp", ".hxx", ".ipp" };
 
-	const int numOfSuffixes = sizeof(suffixes) / sizeof(std::string);
-    for (int i = 0; i != numOfSuffixes; ++i)
+std::string profile;
+boost::filesystem::path root_dir;
+std::vector<std::string> input_files;
+Vera::report report(false);
+
+} // namespace vera
+
+static std::vector<std::string> getListOfScriptNames(const std::string& profile)
+{
+    boost::filesystem::path fileName(vera::root_dir / "profiles" / profile);
+
+    std::ifstream file(fileName.c_str());
+    if (!file)
     {
-		const std::string suf = suffixes[i];
-        const Vera::SourceFiles::FileName::size_type pos = name.rfind(suf);
+        throw std::runtime_error(
+                "cannot open profile description for profile " + profile);
+    }
 
-        if (pos != Vera::SourceFiles::FileName::npos &&
-            pos == name.size() - suf.size())
+    std::vector<std::string> allRules;
+    std::string line;
+    while (file)
+    {
+        std::getline(file, line);
+        boost::trim(line);
+
+        if (!line.empty() && line[0] != '#')
         {
-            return true;
+            allRules.push_back(line);
         }
     }
 
-    return false;
+    return allRules;
 }
 
 int main(int argc, char* argv[])
 {
-    int exitCodeOnFailure = EXIT_FAILURE;
+// 	bool nofail;
+// 	bool nodup;
+// 	bool msvc;
+
+    int exit_failure = EXIT_FAILURE;
+
+    po::options_description desc("Recognized options");
+    desc.add_options()
+        ("help", "print this message")
+        ("version", "print version number")
+        ("nofail", "do not fail even when finding rule violations")
+        ("nodup", "do not duplicate messages if a single rule is violated")
+        ("msvc", "show output compatible with Microsoft Visual Studio")
+        ("param", po::value<std::vector<std::string>>()->composing(), "provide parameters to scripts")
+        ("profile", po::value<std::string>(&vera::profile)->default_value("default"), "execute all rules from the given profile")
+        ("root-dir", po::value<boost::filesystem::path>(&vera::root_dir)->default_value("."), "the directory containing the profile and rule definitions")
+        ;
+
+    po::options_description hidden("Hidden options");
+    hidden.add_options()
+        ("input-file", po::value<std::vector<std::string>>(&vera::input_files), "input file")
+        ;
+
+    po::positional_options_description positional;
+    positional.add("input-file", -1);
+
+    po::options_description options;
+    options.add(desc).add(hidden);
 
     try
     {
-		Vera::Profiles::ProfileName profile("default");
+        po::command_line_parser parser(argc, argv);
+        parser.options(options);
+        parser.positional(positional);
 
-        // the directory containing the profile and rule definitions
-        // by default it is (in this order, first has highest precedence):
-        // - VERA_ROOT (if VERA_ROOT is defined)
-        // - HOME/.vera (if HOME is defined)
-        // - current directory
+        po::variables_map vm;
+        po::store(parser.run(), vm);
+        po::notify(vm);
 
-		Vera::RootDirectory::DirectoryName veraRoot(".");
-        char * veraRootEnv = getenv("HOME");
-        if (veraRootEnv != NULL)
+        if (vm.count("help"))
         {
-            veraRoot = veraRootEnv;
-            veraRoot += "/.vera++";
-        }
-        veraRootEnv = getenv("VERA_ROOT");
-        if (veraRootEnv != NULL)
-        {
-            veraRoot = veraRootEnv;
+            std::cout
+                << "vera++ [options] [input-files]\n\n"
+                << desc << '\n'
+                ;
+            return 0;
         }
 
-        Vera::RootDirectory::setRootDirectory(veraRoot);
-
-        // collect all source file names and interpret options
-
-        Vera::Rules::RuleName singleRule;
-        Vera::Transformations::TransformationName singleTransformation;
-
-        bool omitDuplicates = false;
-
-        int i = 1;
-        while (i != argc)
+        if (vm.count("version"))
         {
-			const std::string arg(argv[i]);
-
-            if (arg == "-help")
-            {
-				std::cout << "vera++ [options] [list-of-files]\n\n"
-                    "Recognized options:\n\n"
-                    "-                  (a single minus sign) indicates that the list of\n"
-                    "                   source file names will be provided on the stdin.\n\n"
-                    "-exclusions file   read exclusions from file\n\n"
-                    "-help              print this message\n\n"
-                    "-nofail            do not fail even when finding rule violations\n\n"
-                    "-nodup             do not duplicate messages if a single rule is violated\n"
-                    "                   many times in a single line of code\n\n"
-                    "-profile name      execute all rules from the given profile\n\n"
-                    "-param name=value  provide parameters to scripts (can be used many times)\n\n"
-                    "-paramfile file    read parameters from file\n\n"
-                    "-rule name         execute the given rule\n"
-                    "                   (note: the .tcl extension is added automatically)\n\n"
-                    "-showrules         include rule name in each report\n\n"
-                    "-transform name    execute the given transformation\n\n"
-                    "-version           print version number\n\n";
-                exit(EXIT_SUCCESS);
-            }
-            else if (arg == "-version")
-            {
-				std::cout << programVersion << '\n';
-                exit(EXIT_SUCCESS);
-            }
-            else if (arg == "-nofail")
-            {
-                exitCodeOnFailure = EXIT_SUCCESS;
-            }
-            else if (arg == "-nodup")
-            {
-                omitDuplicates = true;
-            }
-            else if (arg == "-")
-            {
-                // list of source files is provided on stdin
-				Vera::SourceFiles::FileName name;
-				while (std::cin >> name)
-                {
-					Vera::SourceFiles::addFileName(name);
-                }
-            }
-            else if (arg == "-showrules")
-            {
-				Vera::Reports::setShowRules(true);
-            }
-            else if (arg == "-rule")
-            {
-                ++i;
-                if (argv[i] != NULL)
-                {
-                    singleRule = argv[i];
-                }
-                else
-                {
-					std::cerr << "error: option -rule provided with no rule name\n";
-                    exit(exitCodeOnFailure);
-                }
-            }
-            else if (arg == "-profile")
-            {
-                ++i;
-                if (argv[i] != NULL)
-                {
-                    profile = argv[i];
-                }
-                else
-                {
-					std::cerr << "error: option -profile provided with no profile name\n";
-                    exit(exitCodeOnFailure);
-                }
-            }
-            else if (arg == "-exclusions")
-            {
-                ++i;
-                if (argv[i] != NULL)
-                {
-					Vera::Exclusions::ExclusionFileName file(argv[i]);
-                    Vera::Exclusions::setExclusions(file);
-                }
-                else
-                {
-					std::cerr << "error: option -exclusions provided without name of file\n";
-                    exit(exitCodeOnFailure);
-                }
-            }
-            else if (arg == "-param")
-            {
-                ++i;
-                if (argv[i] != NULL)
-                {
-					Vera::Parameters::ParamAssoc assoc(argv[i]);
-                    Vera::Parameters::set(assoc);
-                }
-                else
-                {
-					std::cerr << "error: option -param provided without name and value\n";
-                    exit(exitCodeOnFailure);
-                }
-            }
-            else if (arg == "-paramfile")
-            {
-                ++i;
-                if (argv[i] != NULL)
-                {
-                    Vera::Parameters::FileName file(argv[i]);
-                    Vera::Parameters::readFromFile(file);
-                }
-                else
-                {
-					std::cerr << "error: option -paramfile provided without name of file\n";
-                    exit(exitCodeOnFailure);
-                }
-            }
-            else if (arg == "-transform")
-            {
-                ++i;
-                if (argv[i] != NULL)
-                {
-                    singleTransformation = argv[i];
-                }
-                else
-                {
-					std::cerr << "error: option -transform provided without name of transformation\n";
-                    exit(exitCodeOnFailure);
-                }
-            }
-            else if (isSourceFileName(arg))
-            {
-				Vera::SourceFiles::addFileName(arg);
-            }
-            else
-            {
-                // the option was not recognized as a name of the source file
-                // or a vera-specific option
-
-				std::cerr << "error: option " << arg << " not recognized\n";
-            }
-
-            ++i;
+            std::cout << "Vera++ 1.1.1 (Community Edition)\n";
+            return 0;
         }
 
-		if (Vera::SourceFiles::empty())
+        if (vera::input_files.empty())
         {
-			std::cerr << "vera++: no input files\n";
-            exit(exitCodeOnFailure);
+            throw std::runtime_error("no input files");
         }
 
-        if (singleTransformation.empty() == false)
+        BOOST_FOREACH(const std::string& script, getListOfScriptNames(vera::profile))
         {
-            if (singleRule.empty() == false || profile != "default")
-            {
-				std::cerr <<
-                    "error: transformation cannot be specified together with rules or profiles\n";
-                exit(exitCodeOnFailure);
-            }
-
-            Vera::Transformations::executeTransformation(singleTransformation);
-        }
-        else if (singleRule.empty() == false)
-        {
-            // single rule requested
-            Vera::Rules::executeRule(singleRule);
-        }
-        else
-        {
-            Vera::Profiles::executeProfile(profile);
+            Vera::Interpreter::execute(script);
         }
 
-		Vera::Reports::dumpAll(std::cerr, omitDuplicates);
+        std::cerr << vera::report << std::endl;
     }
-	catch (const std::exception& e)
+    catch (const std::exception& except)
     {
-		std::cerr << "error: " << e.what() << '\n';
-        exit(exitCodeOnFailure);
+        std::cerr << "error: " << except.what() << std::endl;
+        return exit_failure;
     }
 }

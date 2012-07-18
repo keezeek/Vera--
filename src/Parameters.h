@@ -14,27 +14,12 @@
 namespace Vera
 {
 
-class ParametersError: public std::runtime_error
+struct Parameters
 {
-public:
-    ParametersError(const std::string & msg) :
-            std::runtime_error(msg)
-    {
-    }
-};
+    static void set(const std::string& assoc);
+    static void readFromFile(const std::string& name);
 
-class Parameters
-{
-public:
-    typedef std::string ParamName;
-    typedef std::string ParamValue;
-    typedef std::string ParamAssoc;
-    typedef std::string FileName;
-
-    static void set(const ParamAssoc& assoc);
-    static void readFromFile(const FileName& name);
-
-    static ParamValue get(const ParamName& name, const ParamValue& defaultValue);
+    static std::string get(const std::string& name, const std::string& defaultValue);
 };
 
 } // namespace Vera

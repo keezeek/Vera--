@@ -13,23 +13,9 @@
 namespace Vera
 {
 
-class ScriptError : public std::runtime_error
+struct Interpreter
 {
-public:
-    ScriptError(const std::string & msg) : std::runtime_error(msg) {}
-};
-
-
-class Interpreter
-{
-public:
-    enum ScriptType { rule, transformation };
-
-    typedef std::string DirectoryName;
-    typedef std::string ScriptName;
-
-    static void execute(const DirectoryName & root,
-        ScriptType type, const ScriptName & name);
+    static void execute(const std::string& name);
 };
 
 } // namespace Vera
