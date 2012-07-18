@@ -64,6 +64,7 @@ int main(int argc, char* argv[])
 // 	bool nofail;
 // 	bool nodup;
 // 	bool msvc;
+    int lOO = 100;
 
     int exit_failure = EXIT_FAILURE;
 

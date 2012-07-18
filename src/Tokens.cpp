@@ -421,7 +421,7 @@ void Tokens::parse(const std::string& name, const std::string& src)
     }
 }
 
-Tokens::TokenSequence Tokens::getTokens(const std::string& fileName,
+std::vector<vera::token> Tokens::getTokens(const std::string& fileName,
     int fromLine, int fromColumn, int toLine, int toColumn,
     const std::vector<std::string>& filter)
 {
@@ -449,7 +449,7 @@ Tokens::TokenSequence Tokens::getTokens(const std::string& fileName,
 
     const TokenCollection& tokensInFile = fileTokens_[fileName];
 
-    TokenSequence ret;
+    std::vector<vera::token> ret;
 
     TokenCollection::const_iterator begin;
     TokenCollection::const_iterator end;
@@ -477,7 +477,7 @@ Tokens::TokenSequence Tokens::getTokens(const std::string& fileName,
                     value = token.getTokenValue(fileName);
                 }
 
-                ret.push_back(SingleToken(value, line, column, tokenName));
+				ret.push_back(vera::token(value, line, column, tokenName));
             }
         }
     }

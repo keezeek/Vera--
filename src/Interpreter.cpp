@@ -10,7 +10,6 @@
 #include "Parameters.h"
 #include "SourceLines.h"
 #include "Tokens.h"
-#include "cpptcl-1.1.4/cpptcl.h"
 #include "globals.hpp"
 
 #include <iostream>
@@ -18,6 +17,7 @@
 #include <iterator>
 #include <boost/foreach.hpp>
 #include <luabind/luabind.hpp>
+#include <luabind/adopt_policy.hpp>
 #include <luabind/iterator_policy.hpp>
 
 extern "C"
@@ -25,15 +25,37 @@ extern "C"
 #include "lualib.h"
 }
 
+namespace luabind
+{
+
+template<typename T>
+struct default_converter<std::vector<T>> : native_converter_base<std::vector<T>>
+{
+    static int compute_score(lua_State* L, int index)
+    {
+        return lua_type(L, index) == LUA_TTABLE ? 0 : -1;
+    }
+
+    std::vector<T> from(lua_State* L, int index)
+    {
+        std::vector<T> list;
+
+        for (luabind::iterator i(luabind::object(luabind::from_stack(L, index))), end; i != end; ++i)
+            list.push_back(luabind::object_cast<T>(*i));
+
+        return list;
+    }
+};
+
+template<typename T>
+struct default_converter<std::vector<T> const&> :default_converter<std::vector<T>>
+{
+};
+
+} // namespace luabind
+
 namespace Vera
 {
-namespace // unnamed
-{
-
-// helper global pointer
-// - for those functions that might modify the interpreter's state
-
-Tcl::interpreter *pInter;
 
 void report_(const std::string& fileName, int lineNumber, const std::string& message)
 {
@@ -50,92 +72,14 @@ const std::vector<std::string>& get_files()
     return vera::input_files;
 }
 
-const std::vector<std::string>& get_lines(const std::string& sourceName)
+const std::vector<vera::token>& get_tokens(const std::string& name,
+        int fromLine, int fromColumn, int toLine, int toColumn,
+        const std::vector<std::string>& filter)
 {
-    return SourceLines::getAllLines(sourceName);
+    static std::vector<vera::token> vec;
+    vec = Tokens::getTokens(name, fromLine, fromColumn, toLine, toColumn, filter);
+    return vec;
 }
-
-Tcl::object getSourceFileNames()
-{
-    Tcl::object obj;
-
-    BOOST_FOREACH(std::string name, vera::input_files)
-    {
-        obj.append(*pInter, Tcl::object(name));
-    }
-
-    return obj;
-}
-
-int getLineCount(const std::string& sourceName)
-{
-    return SourceLines::getLineCount(sourceName);
-}
-
-std::string getLine(const std::string& sourceName, int lineNumber)
-{
-    return SourceLines::getLine(sourceName, lineNumber);
-}
-
-Tcl::object getAllLines(const std::string& sourceName)
-{
-    Tcl::object obj;
-
-    BOOST_FOREACH(std::string line, SourceLines::getAllLines(sourceName))
-    {
-        obj.append(*pInter, Tcl::object(line));
-    }
-
-    return obj;
-}
-
-Tcl::object getTokens(const std::string& sourceName, int fromLine, int fromColumn,
-    int toLine, int toColumn, const Tcl::object& filter)
-{
-    std::vector<std::string> filterSeq;
-
-    size_t filterLength = filter.length(*pInter);
-    for (size_t i = 0; i != filterLength; ++i)
-    {
-        filterSeq.push_back(filter.at(*pInter, i).get());
-    }
-
-    Tokens::TokenSequence tokenSeq = Tokens::getTokens(sourceName,
-        fromLine, fromColumn, toLine, toColumn, filterSeq);
-
-    Tcl::object ret;
-    Tokens::TokenSequence::iterator it = tokenSeq.begin();
-    Tokens::TokenSequence::iterator end = tokenSeq.end();
-    for ( ; it != end; ++it)
-    {
-        Tcl::object singleToken;
-        singleToken.append(*pInter, Tcl::object(it->value_));
-        singleToken.append(*pInter, Tcl::object(it->line_));
-        singleToken.append(*pInter, Tcl::object(it->column_));
-        singleToken.append(*pInter, Tcl::object(it->name_));
-
-        ret.append(*pInter, singleToken);
-    }
-
-    return ret;
-}
-
-void registerCommands(Tcl::interpreter& inter)
-{
-    pInter =&inter;
-
-    // commands related to source files and plain source code
-    inter.def("report", report_);
-    inter.def("getParameter", getParameter);
-    inter.def("getSourceFileNames", getSourceFileNames);
-    inter.def("getLineCount", getLineCount);
-    inter.def("getLine", getLine);
-    inter.def("getAllLines", getAllLines);
-    inter.def("getTokens", getTokens);
-}
-
-} // unnamed namespace
-
 
 void Interpreter::execute(const std::string& name)
 {
@@ -146,13 +90,21 @@ void Interpreter::execute(const std::string& name)
     luabind::module(L, "vera")
     [
         luabind::def("input_files", &get_files, luabind::return_stl_iterator),
-        luabind::def("get_lines", &get_lines, luabind::return_stl_iterator),
+        luabind::def("get_lines", &SourceLines::getAllLines, luabind::return_stl_iterator),
         luabind::def("report", &report_),
         luabind::def("line_count", &SourceLines::getLineCount),
-        luabind::def("get_line", &SourceLines::getLine)
+        luabind::def("get_line", &SourceLines::getLine),
+
+        luabind::class_<vera::token>("token")
+            .def_readonly("value", &vera::token::value_)
+            .def_readonly("line", &vera::token::line_)
+            .def_readonly("column", &vera::token::column_)
+            .def_readonly("name", &vera::token::name_),
+
+        luabind::def("get_tokens", &get_tokens, luabind::return_stl_iterator)
     ];
 
-	boost::filesystem::path fileName(vera::root_dir / "scripts" / (name + ".lua"));
+    boost::filesystem::path fileName(vera::root_dir / "scripts" / (name + ".lua"));
     if (luaL_dofile(L, fileName.string().c_str()))
     {
         throw std::runtime_error(lua_tostring(L, lua_gettop(L)));
