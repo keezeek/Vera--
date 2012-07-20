@@ -1,17 +1,12 @@
-# Source files should not use the '\r' (CR) character
+-- Source files should not use the '\r' (CR) character
 
-foreach fileName [getSourceFileNames] {
-    set file [open $fileName "r"]
-    fconfigure $file -translation lf
-    set line [gets $file]
-    set lineCounter 1
-    while {![eof $file]} {
-        set pos [string first "\r" $line]
-        if {$pos != -1 && $pos != [expr [string length $line] - 1]} {
-            report $fileName $lineCounter "\\r (CR) detected in isolation at position ${pos}"
-        }
-        set line [gets $file]
-        incr lineCounter
-    }
-    close $file
-}
+for file in vera.input_files() do
+    line_number = 1
+    for line in io.lines(file) do
+        found = string.find(line, "\r")
+        if found then
+            vera.report(file, line_number, "\\r (CR) detected in isolation at position "..found)
+        end
+        line_number = line_number + 1
+    end
+end

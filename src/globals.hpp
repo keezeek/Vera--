@@ -9,18 +9,18 @@
 #ifndef VERA_GLOBALS_HPP
 #define VERA_GLOBALS_HPP
 
-#include "Reports.h"
 #include <string>
 #include <vector>
 #include <boost/filesystem/path.hpp>
+#include "problem.hpp"
 
 namespace vera
 {
 
-extern Vera::report report;
 extern std::string profile;
 extern boost::filesystem::path root_dir;
 extern std::vector<std::string> input_files;
+extern std::vector<problem> problems;
 
 } // namespace vera
 

@@ -1,55 +1,50 @@
-# File names should be well-formed
+-- File names should be well-formed
 
-set maxDirectoryDepth [getParameter "max-directory-depth" 8]
-set maxDirnameLength [getParameter "max-dirname-length" 31]
-set maxFilenameLength [getParameter "max-filename-length" 31]
-set maxPathLength [getParameter "max-path-length" 100]
+max_directory_depth = 8
+max_dirname_length = 31
+max_filename_length  = 31
+max_path_length = 100
 
-foreach fileName [getSourceFileNames] {
-    if {[string length $fileName] > $maxPathLength} {
-        report $fileName 1 "path name too long"
-    }
+for file in vera.input_files() do
+    if string.len(file) > max_path_length then
+        vera.report(file, 1, "path name too long")
+    end
 
-    set dirDepth 0
-    foreach dir [file split [file dirname $fileName]] {
-        if {$dir == "/" || $dir == "." || $dir == ".."} {
-            continue
-        }
+    dir_depth = 0
+    for dir in string.gmatch(file, "([^\\/]*)[\\/]") do
+        dir_depth = dir_depth + 1
 
-        incr dirDepth
-
-        if {[string length $dir] > $maxDirnameLength} {
-            report $fileName 1 "directory name component too long"
+        if string.len(dir) > max_dirname_length then
+            vera.report(file, 1, "directory name component too long")
             break
-        }
+        end
 
-        set first [string index $dir 0]
-        if {[string is alpha $first] == 0 && $first != "_"} {
-            report $fileName 1 "directory name should start with alphabetic character or underscore"
+        if not string.match(dir, "^[_%a]") then
+            vera.report(file, 1, "directory name should start with alphabetic character or underscore")
             break
-        }
-
-        if {[string first "." $dir] != -1} {
-            report $fileName 1 "directory name should not contain the dot"
+        end
+            
+        if string.find(dir, ".", 1, true) then
+            vera.report(file, 1, "directory name should not contain dots")
             break
-        }
-    }
+        end
+    end
 
-    if {$dirDepth >= $maxDirectoryDepth} {
-        report $fileName 1 "directory structure too deep"
-    }
+    if dir_depth >= max_directory_depth then
+        vera.report(file, 1, "directory structure too deep")
+    end
 
-    set leafName [file tail $fileName]
-    if {[string length $leafName] > $maxFilenameLength} {
-        report $fileName 1 "file name too long"
-    }
+    filename = string.match(file, "[^\\/]+$")
+    if string.len(filename) > max_filename_length then
+        vera.report(file, 1, "file name too long")
+    end
 
-    set first [string index $leafName 0]
-    if {[string is alpha $first] == 0 && $first != "_"} {
-        report $fileName 1 "file name should start with alphabetic character or underscore"
-    }
+    if not string.match(filename, "^[_%a]") then
+        vera.report(file, 1, "file name should start with alphabetic character or underscore")
+    end
 
-    if {[llength [split $leafName .]] > 2} {
-        report $fileName 1 "file name should not contain more than one dot"
-    }
-}
+    firstdot = string.find(filename, ".", 1, true)
+    if firstdot and string.find(filename, ".", firstdot, true) then
+        vera.report(file, 1, "file name should not contain more than one dot")
+    end
+end

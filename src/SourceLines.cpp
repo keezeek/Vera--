@@ -7,7 +7,6 @@
 
 #include "SourceLines.h"
 #include "Tokens.h"
-#include "Reports.h"
 #include "globals.hpp"
 #include <vector>
 #include <map>
@@ -58,7 +57,7 @@ void SourceLines::loadFile(const std::string& name)
         // built-in rule
         if (file.eof())
         {
-            vera::report.add(name, static_cast<int>(lines.size()), "no newline at end of file");
+            vera::problems.push_back(vera::problem(name, lines.size(), "no newline at end of file"));
         }
         else
         {

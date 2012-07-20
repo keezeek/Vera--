@@ -2,7 +2,8 @@
 
 for file in vera.input_files() do
     found = false
-    for token in vera.get_tokens(file, 1, 0, -1, -1, {"ccomment", "cppcomment"}) do
+    tokens = vera.get_tokens(file, 1, 0, -1, -1, {"ccomment", "cppcomment"})
+    for _, token in ipairs(tokens) do
         if string.match(token.value, "Boost Software License") then
             found = true
             break

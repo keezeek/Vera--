@@ -6,8 +6,6 @@
 //
 
 #include "Interpreter.h"
-#include "Reports.h"
-#include "Parameters.h"
 #include "SourceLines.h"
 #include "Tokens.h"
 #include "globals.hpp"
@@ -45,10 +43,21 @@ struct default_converter<std::vector<T>> : native_converter_base<std::vector<T>>
 
         return list;
     }
+
+    void to(lua_State* L, const std::vector<T>& vector)
+    {
+        luabind::object list = luabind::newtable(L);
+
+        for (std::size_t i = 0; i < vector.size(); ++i)
+            list[i + 1] = vector[i];
+
+        list.push(L);
+    }
 };
 
 template<typename T>
-struct default_converter<std::vector<T> const&> :default_converter<std::vector<T>>
+struct default_converter<std::vector<T> const&>
+	: default_converter<std::vector<T>>
 {
 };
 
@@ -57,14 +66,9 @@ struct default_converter<std::vector<T> const&> :default_converter<std::vector<T
 namespace Vera
 {
 
-void report_(const std::string& fileName, int lineNumber, const std::string& message)
+void report_(const std::string& file, int line, const std::string& msg)
 {
-    vera::report.add(fileName, lineNumber, message);
-}
-
-std::string getParameter(const std::string& name, const std::string& defaultValue)
-{
-    return Parameters::get(name, defaultValue);
+	vera::problems.push_back(vera::problem(file, line, msg));
 }
 
 const std::vector<std::string>& get_files()
@@ -101,7 +105,7 @@ void Interpreter::execute(const std::string& name)
             .def_readonly("column", &vera::token::column_)
             .def_readonly("name", &vera::token::name_),
 
-        luabind::def("get_tokens", &get_tokens, luabind::return_stl_iterator)
+        luabind::def("get_tokens", &Tokens::getTokens)
     ];
 
     boost::filesystem::path fileName(vera::root_dir / "scripts" / (name + ".lua"));

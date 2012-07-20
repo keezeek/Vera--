@@ -11,7 +11,8 @@ end
 for file in vera.input_files() do
     if is_header(file) then
         state = "start"
-        for token in vera.get_tokens(file, 1, 0, -1, -1, {"using", "namespace", "identifier"}) do
+        tokens = vera.get_tokens(file, 1, 0, -1, -1, {"using", "namespace", "identifier"})
+        for _, token in ipairs(tokens) do
             if state == "using" and token.name == "namespace" then
                 vera.report(file, line, "using namespace not allowed in header file")
             end

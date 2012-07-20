@@ -23,7 +23,8 @@ keywords = Set{
 state = "other"
 
 for file in vera.input_files() do
-    for token in vera.get_tokens(file, 1, 0, -1, -1, {}) do
+    local tokens = vera.get_tokens(file, 1, 0, -1, -1, {})
+    for _, token in ipairs(tokens) do
         if state == "keyword" then
             if token.name == "space" and token.value == " " then
                 state = "space"

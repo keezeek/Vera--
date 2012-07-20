@@ -78,7 +78,8 @@ keywords = {
 }
 
 for file in vera.input_files() do
-    for token in vera.get_tokens(file, 1, 0, -1, -1, {"pp_define"}) do
+    local tokens = vera.get_tokens(file, 1, 0, -1, -1, {"pp_define"})
+    for _, token in ipairs(tokens) do
         local line = vera.get_line(file, token.line)
         local macro = string.match(line, "#%s*define%s*(%S+)")
 

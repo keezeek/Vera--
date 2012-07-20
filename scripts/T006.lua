@@ -1,18 +1,11 @@
-# Keywords return and throw should be immediately followed by a semicolon or a single space
+-- Keywords return and throw should be immediately followed by a semicolon or a single space
 
-foreach f [getSourceFileNames] {
-    foreach t [getTokens $f 1 0 -1 -1 {return throw}] {
-        set keyword [lindex $t 0]
-        set line [lindex $t 1]
-        set column [lindex $t 2]
-        set followingTokens [getTokens $f $line [expr $column + [string length $keyword]] [expr $line + 1] 0 {}]
-        if {$followingTokens == {}} {
-            report $f $line "keyword '${keyword}' not immediately followed by a semicolon or a single space"
-        } else {
-            set first [lindex [lindex $followingTokens 0] 0]
-            if {$first != ";" && $first != " " && !($keyword == "throw" && $first == "(")} {
-                report $f $line "keyword '${keyword}' not immediately followed by a semicolon or a single space"
-            }
-        }
-    }
-}
+for file in vera.input_files() do
+    tokens = vera.get_tokens(file, 1, 0, -1, -1, {"return", "throw"})
+    for _, token in ipairs(tokens) do
+        following = vera.get_tokens(file, token.line, token.column + string.len(token.value), token.line + 1, 0, {})[1]
+        if not following or (following.value ~= ";" and following.value ~= " ") then
+            vera.report(file, token.line, "keyword '"..token.value.."' not immediately followed by a semicolon or a single space")
+        end
+    end
+end

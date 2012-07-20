@@ -8,7 +8,6 @@
 #ifndef SOURCELINES_H_INCLUDED
 #define SOURCELINES_H_INCLUDED
 
-#include "Reports.h"
 #include <vector>
 
 namespace Vera

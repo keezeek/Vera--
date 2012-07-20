@@ -27,12 +27,10 @@ include_directories(
   )
 
 set(vera_src
+  src/globals.hpp
   src/Interpreter.cpp
   src/Interpreter.h
-  src/Parameters.cpp
-  src/Parameters.h
-  src/Reports.cpp
-  src/Reports.h
+  src/problem.hpp
   src/SourceLines.cpp
   src/SourceLines.h
   src/Tokens.cpp
@@ -59,6 +57,9 @@ set(luabind_src
   luabind/src/weak_ref.cpp
   luabind/src/wrapper_base.cpp
   )
+
+source_group(vera++  FILES ${vera_src})
+source_group(luabind FILES ${luabind_src})
 
 add_executable(vera++
   ${vera_src}

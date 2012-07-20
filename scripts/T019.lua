@@ -11,7 +11,8 @@ filter = {
     }
 
 for file in vera.input_files() do
-    for token in vera.get_tokens(file, 1, 0, -1, -1, filter) do
+    tokens = vera.get_tokens(file, 1, 0, -1, -1, filter)
+    for _, token in ipairs(tokens) do
 
         if state == "control" then
             if token.name == "leftparen" then

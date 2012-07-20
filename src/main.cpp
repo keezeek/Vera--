@@ -16,8 +16,6 @@
 #include <boost/filesystem.hpp>
 
 #include "Interpreter.h"
-#include "Parameters.h"
-#include "Reports.h"
 #include "globals.hpp"
 
 namespace po = boost::program_options;
@@ -28,7 +26,7 @@ namespace vera
 std::string profile;
 boost::filesystem::path root_dir;
 std::vector<std::string> input_files;
-Vera::report report(false);
+std::vector<problem> problems;
 
 } // namespace vera
 
@@ -61,9 +59,9 @@ static std::vector<std::string> getListOfScriptNames(const std::string& profile)
 
 int main(int argc, char* argv[])
 {
-// 	bool nofail;
-// 	bool nodup;
-// 	bool msvc;
+//  bool nofail;
+//  bool nodup;
+//  bool msvc;
     int lOO = 100;
 
     int exit_failure = EXIT_FAILURE;
@@ -75,7 +73,6 @@ int main(int argc, char* argv[])
         ("nofail", "do not fail even when finding rule violations")
         ("nodup", "do not duplicate messages if a single rule is violated")
         ("msvc", "show output compatible with Microsoft Visual Studio")
-        ("param", po::value<std::vector<std::string>>()->composing(), "provide parameters to scripts")
         ("profile", po::value<std::string>(&vera::profile)->default_value("default"), "execute all rules from the given profile")
         ("root-dir", po::value<boost::filesystem::path>(&vera::root_dir)->default_value("."), "the directory containing the profile and rule definitions")
         ;
@@ -110,8 +107,7 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        if (vm.count("version"))
-        {
+      if( vm.count("version") )  {
             std::cout << "Vera++ 1.1.1 (Community Edition)\n";
             return 0;
         }
@@ -121,12 +117,27 @@ int main(int argc, char* argv[])
             throw std::runtime_error("no input files");
         }
 
+        BOOST_FOREACH(std::string & file, vera::input_files)
+        {
+            file = boost::filesystem::absolute(file).make_preferred().string();
+        }
+
         BOOST_FOREACH(const std::string& script, getListOfScriptNames(vera::profile))
         {
             Vera::Interpreter::execute(script);
         }
 
-        std::cerr << vera::report << std::endl;
+        std::sort(vera::problems.begin(), vera::problems.end());
+
+        BOOST_FOREACH(const vera::problem& p, vera::problems)
+        {
+            //std::cerr << p.file << ':' << p.line << ": " << p.msg << '\n';
+            std::cerr
+                << p.file
+                << '(' << p.line << ") : "
+                << p.msg << '\n'
+                ;
+        }
     }
     catch (const std::exception& except)
     {

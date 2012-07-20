@@ -2,8 +2,9 @@
 
 for file in vera.input_files() do
     found = false
-    for token in vera.get_tokens(file, 1, 0, -1, -1, {"ccomment", "cppcomment"}) do
-        if string.match(token.value, "copyright") then
+    tokens = vera.get_tokens(file, 1, 0, -1, -1, {"ccomment", "cppcomment"})
+    for _, token in ipairs(tokens) do
+        if string.match(token.value, "[Cc]opyright") then
             found = true
             break
         end
