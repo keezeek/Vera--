@@ -14,6 +14,7 @@
 
 namespace vera
 {
+class file;
 
 struct token
 {
@@ -39,7 +40,7 @@ struct TokenRef
     TokenRef(boost::wave::token_id id, int line, int column, int length, const std::string& value);
 
     std::string name() const;
-    std::string value(const std::string& fileName) const;
+    std::string value(const vera::file& file) const;
 
     int line() const
     {
@@ -70,16 +71,6 @@ private:
 
 private:
     static std::vector<std::string> physicalTokens;
-};
-
-class Tokens
-{
-public:
-    static void parse(const std::string& name, const std::string& src);
-
-    static std::vector<vera::token> getTokens(const std::string& name,
-        int fromLine, int fromColumn, int toLine, int toColumn,
-        const std::vector<std::string>& filter);
 };
 
 } // namespace Vera

@@ -6,7 +6,6 @@
 //
 
 #include "Interpreter.h"
-#include "SourceLines.h"
 #include "Tokens.h"
 #include "globals.hpp"
 #include "file.hpp"
@@ -28,7 +27,7 @@ namespace luabind
 {
 
 template<typename T>
-struct default_converter<std::vector<T>> : native_converter_base<std::vector<T>>
+struct default_converter<std::vector<T> > : native_converter_base<std::vector<T> >
 {
     static int compute_score(lua_State* L, int index)
     {
@@ -58,7 +57,7 @@ struct default_converter<std::vector<T>> : native_converter_base<std::vector<T>>
 
 template<typename T>
 struct default_converter<std::vector<T> const&>
-	: default_converter<std::vector<T>>
+	: default_converter<std::vector<T> >
 {
 };
 
@@ -67,12 +66,7 @@ struct default_converter<std::vector<T> const&>
 namespace Vera
 {
 
-void report_(const std::string& file, int line, const std::string& msg)
-{
-	vera::problems.push_back(vera::problem(file, line, msg));
-}
-
-const std::vector<std::string>& get_files()
+const std::vector<vera::file>& get_files()
 {
     return vera::input_files;
 }
@@ -83,13 +77,9 @@ void Interpreter::execute(const std::string& name)
     luaL_openlibs(L);
     luabind::open(L);
 
-    luabind::module(L, "vera")
+    luabind::module(L)
     [
         luabind::def("input_files", &get_files, luabind::return_stl_iterator),
-        luabind::def("get_lines", &SourceLines::getAllLines, luabind::return_stl_iterator),
-        luabind::def("report", &report_),
-        luabind::def("line_count", &SourceLines::getLineCount),
-        luabind::def("get_line", &SourceLines::getLine),
 
         luabind::class_<vera::token>("token")
             .def_readonly("value", &vera::token::value_)
@@ -100,9 +90,13 @@ void Interpreter::execute(const std::string& name)
         luabind::class_<vera::file>("file")
             .def_readonly("path", &vera::file::path)
             .def_readonly("line_count", &vera::file::line_count)
-            ,
-
-        luabind::def("get_tokens", &Tokens::getTokens)
+            .def("get_lines", &vera::file::lines, luabind::return_stl_iterator)
+            .def("get_line", &vera::file::get_line)
+            .def("report", &vera::file::report)
+            .def("get_tokens", &vera::file::get_tokens)
+            .def("get_tokens", &vera::file::get_tokens2)
+            .def("get_tokens", &vera::file::get_tokens3)
+            .def("get_tokens", &vera::file::get_tokens4)
     ];
 
     boost::filesystem::path fileName(vera::root_dir / "scripts" / (name + ".lua"));

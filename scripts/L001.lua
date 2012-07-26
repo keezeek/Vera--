@@ -1,11 +1,9 @@
 -- No trailing whitespace
 
-for file in vera.input_files() do
-    local line_number = 1
-    for line in vera.get_lines(file) do
-        if string.match(line, "%s+$") then
-            vera.report(file, line_number, "trailing whitespace")
+for file in input_files() do
+    for line = 1, file.line_count do
+        if string.match(file:get_line(line), "%s+$") then
+            file:report(line, "trailing whitespace")
         end
-        line_number = line_number + 1
     end
 end

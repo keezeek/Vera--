@@ -25,8 +25,7 @@ namespace vera
 
 std::string profile;
 boost::filesystem::path root_dir;
-std::vector<std::string> input_files;
-std::vector<problem> problems;
+std::vector<vera::file> input_files;
 
 } // namespace vera
 
@@ -65,6 +64,7 @@ int main(int argc, char* argv[])
     int lOO = 100;
 
     int exit_failure = EXIT_FAILURE;
+    std::vector<std::string> input;
 
     po::options_description desc("Recognized options");
     desc.add_options()
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
-        ("input-file", po::value<std::vector<std::string>>(&vera::input_files), "input file")
+        ("input-file", po::value<std::vector<std::string> >(&input), "input file")
         ;
 
     po::positional_options_description positional;
@@ -112,14 +112,15 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        if (vera::input_files.empty())
+        if (input.empty())
         {
             throw std::runtime_error("no input files");
         }
 
-        BOOST_FOREACH(std::string & file, vera::input_files)
+        BOOST_FOREACH(std::string file, input)
         {
             file = boost::filesystem::absolute(file).make_preferred().string();
+            vera::input_files.push_back(file);
         }
 
         BOOST_FOREACH(const std::string& script, getListOfScriptNames(vera::profile))
@@ -127,16 +128,9 @@ int main(int argc, char* argv[])
             Vera::Interpreter::execute(script);
         }
 
-        std::sort(vera::problems.begin(), vera::problems.end());
-
-        BOOST_FOREACH(const vera::problem& p, vera::problems)
+        BOOST_FOREACH(vera::file& file, vera::input_files)
         {
-            //std::cerr << p.file << ':' << p.line << ": " << p.msg << '\n';
-            std::cerr
-                << p.file
-                << '(' << p.line << ") : "
-                << p.msg << '\n'
-                ;
+            file.print_report(std::cerr);
         }
     }
     catch (const std::exception& except)

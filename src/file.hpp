@@ -26,6 +26,8 @@ public:
         problems_.push_back(problem(line, msg));
     }
 
+    void print_report(std::ostream&);
+
     const std::string& path()
     {
         return path_;
@@ -41,20 +43,27 @@ public:
         return lines_.size();
     }
 
-    const std::string& get_line(std::size_t idx) const
+    const std::string& get_line(int number) const
     {
-        return lines_.at(idx);
+       if (number < 1 || number > static_cast<int>(lines_.size()))
+        {
+            std::cerr << "Requested wrong line number: " << number << '\n';
+            std::cerr << "lines.size in " << path_ << " is " << lines_.size() << '\n';
+            throw std::runtime_error("requested line number is out of range");
+        }
+
+        return lines_[number - 1];
     }
 
     std::vector<vera::token> get_tokens() const;
 
-    std::vector<vera::token> get_tokens(
+    std::vector<vera::token> get_tokens2(
         int from_line, int from_column, int to_line, int to_column) const;
 
-    std::vector<vera::token> get_tokens(
+    std::vector<vera::token> get_tokens3(
         const std::vector<std::string>& filter) const;
 
-    std::vector<vera::token> get_tokens(
+    std::vector<vera::token> get_tokens4(
         int from_line, int from_column, int to_line, int to_column,
         const std::vector<std::string>& filter) const;
 

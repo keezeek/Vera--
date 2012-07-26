@@ -12,15 +12,14 @@
 #include <string>
 #include <vector>
 #include <boost/filesystem/path.hpp>
-#include "problem.hpp"
+#include "file.hpp"
 
 namespace vera
 {
 
 extern std::string profile;
 extern boost::filesystem::path root_dir;
-extern std::vector<std::string> input_files;
-extern std::vector<problem> problems;
+extern std::vector<vera::file> input_files;
 
 } // namespace vera
 

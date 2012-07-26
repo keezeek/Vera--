@@ -32,9 +32,6 @@ set(vera_src
   src/globals.hpp
   src/Interpreter.cpp
   src/Interpreter.h
-  src/problem.hpp
-  src/SourceLines.cpp
-  src/SourceLines.h
   src/Tokens.cpp
   src/Tokens.h
   src/main.cpp
