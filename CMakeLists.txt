@@ -27,6 +27,8 @@ include_directories(
   )
 
 set(vera_src
+  src/file.cpp
+  src/file.hpp
   src/globals.hpp
   src/Interpreter.cpp
   src/Interpreter.h

@@ -24,95 +24,63 @@
 
 namespace Vera
 {
-namespace // unnamed
-{
-
-struct TokenRef
-{
-    TokenRef(boost::wave::token_id id, int line, int column, int length) :
-            id_(id), line_(line), column_(column), length_(length), index_(-1)
-    {
-    }
-
-    TokenRef(boost::wave::token_id id, int line, int column, int length, const std::string& value) :
-            id_(id), line_(line), column_(column), length_(length)
-    {
-        // newline is optimized as the most common case
-        if (id_ != boost::wave::T_NEWLINE)
-        {
-            // value of the token is stored in physicalTokens collection
-            // (because it has no physical representation in the source code)
-            index_ = static_cast<int>(physicalTokens.size());
-            physicalTokens.push_back(value);
-        }
-    }
-
-    std::string value(const std::string& fileName) const
-    {
-        if (id_ == boost::wave::T_NEWLINE)
-        {
-            return "\n";
-        }
-        else if (index_ >= 0)
-        {
-            // token value stored in the physicalTokens structure
-            // (this is used with line continuation and other cases
-            // where the token has no representation in physical lines)
-            return physicalTokens[static_cast<size_t>(index_)];
-        }
-        else
-        {
-            // token value has to be retrieved from the physical line collection
-            return SourceLines::getLine(fileName, line_).substr(column_, length_);
-        }
-    }
-
-    std::string name() const
-    {
-        std::string tokenName = boost::wave::get_token_name(id_).c_str();
-        boost::algorithm::to_lower(tokenName);
-        return tokenName;
-    }
-
-    int line() const
-    {
-        return line_;
-    }
-
-    int column() const
-    {
-        return column_;
-    }
-
-    // TODO: remove
-    boost::wave::token_id id() const
-    {
-        return id_;
-    }
-
-private:
-    boost::wave::token_id id_;
-    int line_;
-    int column_;
-    int length_;
-
-    // if >= 0, it is the index into the physicalTokens collection,
-    // used only for line continuation
-    // and when line_ and column_ do not reflect the physical layout:
-    int index_;
-
-private:
-    static std::vector<std::string> physicalTokens;
-};
 
 std::vector<std::string> TokenRef::physicalTokens;
+
+TokenRef::TokenRef(boost::wave::token_id id, int line, int column, int length) :
+        id_(id), line_(line), column_(column), length_(length), index_(-1)
+{
+}
+
+TokenRef::TokenRef(boost::wave::token_id id,
+            int line, int column, int length, const std::string& value) :
+        id_(id), line_(line), column_(column), length_(length)
+{
+    // newline is optimized as the most common case
+    if (id_ != boost::wave::T_NEWLINE)
+    {
+        // value of the token is stored in physicalTokens collection
+        // (because it has no physical representation in the source code)
+        index_ = static_cast<int>(physicalTokens.size());
+        physicalTokens.push_back(value);
+    }
+}
+
+std::string TokenRef::name() const
+{
+    std::string tokenName = boost::wave::get_token_name(id_).c_str();
+    boost::algorithm::to_lower(tokenName);
+    return tokenName;
+}
+
+std::string TokenRef::value(const std::string& fileName) const
+{
+    if (id_ == boost::wave::T_EOF)
+        return std::string();
+
+    if (id_ == boost::wave::T_NEWLINE)
+        return "\n";
+
+    if (index_ >= 0)
+    {
+        // token value stored in the physicalTokens structure
+        // (this is used with line continuation and other cases
+        // where the token has no representation in physical lines)
+        return physicalTokens[static_cast<size_t>(index_)];
+    }
+    else
+    {
+        // token value has to be retrieved from the physical line collection
+        return SourceLines::getLine(fileName, line_).substr(column_, length_);
+    }
+}
+
+namespace // unnamed
+{
 
 typedef std::vector<TokenRef> TokenCollection;
 typedef std::map<std::string, TokenCollection> FileTokenCollection;
 FileTokenCollection fileTokens_;
-
-typedef boost::function<bool(boost::wave::token_id)> filter_fun;
-typedef std::vector<filter_fun> CompiledFilterSequence;
 
 boost::wave::token_id tokenIdFromTokenFilter(const std::string& filter)
 {
@@ -300,52 +268,9 @@ boost::wave::token_id tokenIdFromTokenFilter(const std::string& filter)
     }
 }
 
-bool matchAll(boost::wave::token_id)
+class bounds_filter
 {
-    return true;
-}
-
-bool matchTokenBaseId(boost::wave::token_id id, boost::wave::token_id ref)
-{
-    return BASEID_FROM_TOKEN(id) == ref;
-}
-
-CompiledFilterSequence prepareCompiledFilter(const std::vector<std::string>& filterSeq)
-{
-    CompiledFilterSequence ret;
-
-    if (filterSeq.empty())
-    {
-        // with empty filter all tokens should be accepted
-        ret.push_back(matchAll);
-    }
-    else
-    {
-        std::vector<std::string>::const_iterator it = filterSeq.begin();
-        const std::vector<std::string>::const_iterator end = filterSeq.end();
-
-        for ( ; it != end; ++it)
-        {
-            ret.push_back(bind(matchTokenBaseId, _1, tokenIdFromTokenFilter(*it)));
-        }
-    }
-
-    return ret;
-}
-
-bool match(const CompiledFilterSequence& compiledFilter, boost::wave::token_id id)
-{
-    BOOST_FOREACH(const filter_fun& fun, compiledFilter)
-    {
-        if (fun(id))
-            return true;
-    }
-
-    return false;
-}
-
-struct bounds_filter
-{
+public:
     bounds_filter(int from_line, int from_column, int to_line, int to_column) :
             from_line(from_line),
             from_column(from_column),
@@ -376,6 +301,33 @@ private:
     int from_column;
     int to_line;
     int to_column;
+};
+
+class token_filter
+{
+public:
+    token_filter(const std::vector<std::string>& filter)
+    {
+        std::transform(filter.begin(), filter.end(), std::back_inserter(tokens),
+                tokenIdFromTokenFilter);
+    }
+
+    bool operator()(const TokenRef& ref) const
+    {
+        if (tokens.empty())
+            return true;
+
+        BOOST_FOREACH(const boost::wave::token_id& id, tokens)
+        {
+            if (BASEID_FROM_TOKEN(id) == ref.id())
+                return true;
+        }
+
+        return false;
+    }
+
+private:
+    std::vector<boost::wave::token_id> tokens;
 };
 
 } // unnamed namespace
@@ -452,45 +404,24 @@ std::vector<vera::token> Tokens::getTokens(const std::string& fileName,
     int fromLine, int fromColumn, int toLine, int toColumn,
     const std::vector<std::string>& filter)
 {
-    if ((fromLine < 1) ||
-        (fromColumn < 0) ||
-        (toLine > 0&& fromLine > toLine) ||
-        (fromLine == toLine&& toColumn >= 0&& fromColumn > toColumn))
+    // lazy load and parse
+    if (fileTokens_.find(fileName) == fileTokens_.end())
     {
-        throw std::runtime_error("illegal range of tokens requested by the script");
-    }
-
-    {
-        // lazy load and parse
-        const FileTokenCollection::const_iterator fit = fileTokens_.find(fileName);
-        if (fit == fileTokens_.end())
-        {
-            SourceLines::loadFile(fileName);
-        }
+        SourceLines::loadFile(fileName);
     }
 
     // here we know that the file is already loaded and parsed
     // (or the exception was thrown in the above)
 
-    const CompiledFilterSequence compiledFilter = prepareCompiledFilter(filter);
-
     const TokenCollection& tokensInFile = fileTokens_[fileName];
 
     std::vector<vera::token> ret;
 
-    BOOST_FOREACH(const TokenRef& token, tokensInFile | boost::adaptors::filtered(bounds_filter(fromLine, fromColumn, toLine, toColumn)))
+    BOOST_FOREACH(const TokenRef& token, tokensInFile
+        | boost::adaptors::filtered(bounds_filter(fromLine, fromColumn, toLine, toColumn))
+        | boost::adaptors::filtered(token_filter(filter)))
     {
-        if (match(compiledFilter, token.id()))
-        {
-            std::string tokenName = token.name();
-            std::string value;
-            if (tokenName != "eof")
-            {
-                value = token.value(fileName);
-            }
-
-            ret.push_back(vera::token(value, token.line(), token.column(), tokenName));
-        }
+        ret.push_back(vera::token(token.value(fileName), token.line(), token.column(), token.name()));
     }
 
     return ret;

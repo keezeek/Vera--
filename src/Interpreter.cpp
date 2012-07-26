@@ -9,6 +9,7 @@
 #include "SourceLines.h"
 #include "Tokens.h"
 #include "globals.hpp"
+#include "file.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -76,15 +77,6 @@ const std::vector<std::string>& get_files()
     return vera::input_files;
 }
 
-const std::vector<vera::token>& get_tokens(const std::string& name,
-        int fromLine, int fromColumn, int toLine, int toColumn,
-        const std::vector<std::string>& filter)
-{
-    static std::vector<vera::token> vec;
-    vec = Tokens::getTokens(name, fromLine, fromColumn, toLine, toColumn, filter);
-    return vec;
-}
-
 void Interpreter::execute(const std::string& name)
 {
     lua_State* L = luaL_newstate();
@@ -104,6 +96,11 @@ void Interpreter::execute(const std::string& name)
             .def_readonly("line", &vera::token::line_)
             .def_readonly("column", &vera::token::column_)
             .def_readonly("name", &vera::token::name_),
+
+        luabind::class_<vera::file>("file")
+            .def_readonly("path", &vera::file::path)
+            .def_readonly("line_count", &vera::file::line_count)
+            ,
 
         luabind::def("get_tokens", &Tokens::getTokens)
     ];

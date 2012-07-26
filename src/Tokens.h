@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <boost/wave/token_ids.hpp>
 
 namespace vera
 {
@@ -31,6 +32,45 @@ struct token
 
 namespace Vera
 {
+
+struct TokenRef
+{
+    TokenRef(boost::wave::token_id id, int line, int column, int length);
+    TokenRef(boost::wave::token_id id, int line, int column, int length, const std::string& value);
+
+    std::string name() const;
+    std::string value(const std::string& fileName) const;
+
+    int line() const
+    {
+        return line_;
+    }
+
+    int column() const
+    {
+        return column_;
+    }
+
+    // TODO: remove
+    boost::wave::token_id id() const
+    {
+        return id_;
+    }
+
+private:
+    boost::wave::token_id id_;
+    int line_;
+    int column_;
+    int length_;
+
+    // if >= 0, it is the index into the physicalTokens collection,
+    // used only for line continuation
+    // and when line_ and column_ do not reflect the physical layout:
+    int index_;
+
+private:
+    static std::vector<std::string> physicalTokens;
+};
 
 class Tokens
 {
